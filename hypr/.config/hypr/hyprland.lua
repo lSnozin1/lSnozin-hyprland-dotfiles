@@ -1,0 +1,12 @@
+require("hyprland_modules.DefaultApps") -- SEMPRE primeiro
+require("hyprland_modules.Monitors")
+require("hyprland_modules.Binds")
+require("hyprland_modules.AutoStarts")
+require("hyprland_modules.EnvVars")
+require("hyprland_modules.Workspaces")
+require("hyprland_modules.Inputs")
+require("hyprland_modules.WindowRules")
+require("hyprland_modules.Permissions")
+require("hyprland_modules.Variables")
+require("hyprland_modules.Animations")
+require("hyprland_modules.Layout")

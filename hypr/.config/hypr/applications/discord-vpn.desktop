@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Discord (VPN)
+Comment= Runs Discord via ProtonVPN with vopono
+Exec=/home/lsnozin/.local/bin/discord-vpn.sh
+Icon=discord
+Type=Application
+Categories=Network;InstantMessaging;
+Terminal=false

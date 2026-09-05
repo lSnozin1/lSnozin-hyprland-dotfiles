@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Waywallen
+Comment= Waywallen with Icon for Rofi
+Exec=/home/lsnozin/Applications/waywallen-0.3.7-x86_64.AppImage
+Icon=waywallen
+Type=Application
+Categories=Utility;
+Terminal=false
