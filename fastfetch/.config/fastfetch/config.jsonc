@@ -83,6 +83,10 @@
       "format": "\u001b[90m┌──────────────────────── Date / Time ─────────────────────────┐"
     },
     {
+      "type": "custom",
+      "format": "\u001b[1;35m DATE/TIME\u001b[0m"
+    },
+    {
       "type": "command",
       "key": "│ ›  OS Age  ",
       "keyColor": "magenta",
@@ -95,7 +99,7 @@
     },
     {
       "type": "datetime",
-      "key": "│ ›  DateTime  ",
+      "key": "└ ›  DateTime  ",
       "keyColor": "magenta"
     },
     {
