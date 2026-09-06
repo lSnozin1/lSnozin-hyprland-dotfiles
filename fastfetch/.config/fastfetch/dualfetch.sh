@@ -51,10 +51,10 @@ run_fastfetch() {
     local config="$1" outfile="$2" cols="${3:-}"
     if [[ -n "$cols" ]]; then
         COLUMNS="$cols" timeout "${FASTFETCH_TIMEOUT}s" fastfetch \
-            -c "$config" --pipe false >"$outfile" 2>/dev/null
+            -c "$config" --processing-timeout 1000 --pipe false >"$outfile" 2>/dev/null
     else
         timeout "${FASTFETCH_TIMEOUT}s" fastfetch \
-            -c "$config" --pipe false >"$outfile" 2>/dev/null
+            -c "$config" --processing-timeout 1000 --pipe false >"$outfile" 2>/dev/null
     fi
 }
 
