@@ -163,6 +163,25 @@
       "type": "custom",
       "format": "\u001b[90m└──────────────────────────────────────────────────────────────┘"
     },
+    "break",
+    {
+      "type": "custom",
+      "format": "\u001b[90m┌────────────────────────── Extras ───────────────────────────┐"
+    },
+    {
+      "type": "media",
+      "key": " │ › MUSIC ",
+      "keyColor": "magenta"
+    },
+    {
+      "type": "sound",
+      "key": " │ › SOUND ",
+      "keyColor": "magenta"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[90m└───────────────────────────────────────────────────────────────┘"
+    },
     {
       "type": "colors",
       "paddingLeft": 2,
