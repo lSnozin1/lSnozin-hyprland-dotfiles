@@ -124,9 +124,10 @@
       "keyColor": "yellow"
     },
     {
-      "type": "shell",
+      "type": "command",
       "key": " └ ›󰞷 ",
-      "keyColor": "yellow"
+      "keyColor": "yellow",
+      "text": "$SHELL --version | sed 's/, version//'"
     },
     "break",
     {
