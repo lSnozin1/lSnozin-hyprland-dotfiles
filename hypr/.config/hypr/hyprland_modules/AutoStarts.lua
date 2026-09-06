@@ -18,7 +18,7 @@ hl.on("hyprland.start", function()
 	-- keyring (kinda important)
 	hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP & gnome-keyring-daemon --start --components=secrets")
 
-	-- headless kitty (not that that important but helps with kitty performance)
+	-- headless kitty (not that that important but helps with kitty performance and resource usage by a noticiable margin)
 	hl.exec_cmd("kitty --start-as=hidden --single-instance")
 
 	-- wallpaper (not that important)
