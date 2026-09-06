@@ -59,16 +59,28 @@ run_fastfetch() {
 }
 
 render_wide() {
-    local leftraw="$tmpdir/left.raw" rightraw="$tmpdir/right.raw"
+    local leftraw="$tmpdir/left.raw"
+    local rightraw="$tmpdir/right.raw"
 
-    # Coluna onde a segunda coluna começa.
-    local RIGHT_COLUMN=101
+    # Posição horizontal da segunda coluna.
+    # Aumentado para deixar um espaço mais confortável após a coluna esquerda.
+    local RIGHT_COLUMN=106
+
+    # A coluna esquerda contém a imagem kitty, então continua usando
+    # a largura artificial grande para impedir que o fastfetch corte
+    # ou altere o layout da imagem.
+    local LEFT_CAPTURE_WIDTH="$CAPTURE_WIDTH"
+
+    # A coluna direita não tem imagem. Usamos uma largura mais próxima
+    # da área real disponível para impedir que módulos longos, como
+    # "media", gerem linhas enormes que acabam fazendo wrap.
+    local RIGHT_CAPTURE_WIDTH=80
 
     # As duas colunas continuam sendo geradas em paralelo.
-    run_fastfetch "$LEFT_CONFIG" "$leftraw" "$CAPTURE_WIDTH" &
+    run_fastfetch "$LEFT_CONFIG" "$leftraw" "$LEFT_CAPTURE_WIDTH" &
     local pid_left=$!
 
-    run_fastfetch "$RIGHT_CONFIG" "$rightraw" "$CAPTURE_WIDTH" &
+    run_fastfetch "$RIGHT_CONFIG" "$rightraw" "$RIGHT_CAPTURE_WIDTH" &
     local pid_right=$!
 
     wait "$pid_left"
@@ -86,17 +98,31 @@ render_wide() {
     # Limpa a tela e volta para o canto superior esquerdo.
     printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
 
-    # Imprime a coluna esquerda normalmente.
-    # Isso preserva integralmente o kitty-direct.
+    # A coluna esquerda é impressa exatamente como o fastfetch gerou.
+    # Isso preserva integralmente o protocolo gráfico kitty.
     cat "$leftraw"
 
-    # Posiciona cada linha da coluna direita usando coordenadas
-    # absolutas: linha + coluna.
+    # Imprime a coluna direita usando posição absoluta.
     local i r
     for (( i = 0; i < ${#right_lines[@]}; i++ )); do
         r="${right_lines[i]}"
+
+        # Linha + coluna absolutas.
         printf '%s%s' "${ESC}[$((i + 1));${RIGHT_COLUMN}H" "$r"
     done
+
+    # Devolve o cursor para uma posição previsível abaixo do conteúdo.
+    # Isso evita que o prompt do shell apareça no meio da segunda coluna.
+    local left_height right_height final_row
+
+    left_height=$(wc -l < "$leftraw")
+    right_height=${#right_lines[@]}
+
+    final_row=$left_height
+    (( right_height > final_row )) && final_row=$right_height
+    (( final_row += 1 ))
+
+    printf '%s' "${ESC}[${final_row};1H"
 }
 
 render_narrow() {
