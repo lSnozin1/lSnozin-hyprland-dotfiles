@@ -12,12 +12,12 @@
     },
     {
       "type": "host",
-      "key": "󰌢  PC",
+      "key": " 󰌢  PC",
       "keyColor": "green"
     },
     {
       "type": "custom",
-      "format": "\u001b[1;32m󰨇 Core Hardware\u001b[0m"
+      "format": "\u001b[1;32m 󰨇 Core Hardware\u001b[0m"
     },
     {
       "type": "cpu",
@@ -101,34 +101,38 @@
     "break",
     {
       "type": "custom",
-      "format": "\u001b[90m┌──────────────────────── Software ────────────────────────┐"
+      "format": "\u001b[90m┌────────────────────────── Internals ─────────────────────────┐"
     },
     {
       "type": "os",
-      "key": "  OS",
+      "key": "OS ",
       "keyColor": "yellow"
     },
     {
       "type": "kernel",
-      "key": "│ ├󰌽 ",
+      "key": "│ ›󰌽 ",
       "keyColor": "yellow"
     },
     {
       "type": "bios",
-      "key": "│ ├󰖡 ",
+      "key": "│ ›󰖡 ",
       "keyColor": "yellow"
     },
     {
       "type": "packages",
-      "key": "│ ├󰏗 ",
+      "key": "│ ›󰏗 ",
       "keyColor": "yellow"
     },
     {
       "type": "shell",
-      "key": "└ └󰞷 ",
+      "key": "└ ›󰞷 ",
       "keyColor": "yellow"
     },
     "break",
+    {
+      "type": "custom",
+      "format": "\u001b[1;34m SOFTWARE\u001b[0m"
+    },
     {
       "type": "de",
       "key": "󰧨  DE",
@@ -136,27 +140,27 @@
     },
     {
       "type": "lm",
-      "key": "│ ├󰍁 ",
+      "key": "│ ›󰍁 ",
       "keyColor": "blue"
     },
     {
       "type": "wm",
-      "key": "│ ├󱂬 ",
+      "key": "│ ›󱂬 ",
       "keyColor": "blue"
     },
     {
       "type": "wmtheme",
-      "key": "│ ├󰉦 ",
+      "key": "│ ›󰉦 ",
       "keyColor": "blue"
     },
     {
       "type": "terminal",
-      "key": "└ └󰆍 ",
+      "key": "└ ›󰆍 ",
       "keyColor": "blue"
     },
     {
       "type": "custom",
-      "format": "\u001b[90m└─────────────────────────────────────────────────────────┘"
+      "format": "\u001b[90m└──────────────────────────────────────────────────────────────┘"
     },
     {
       "type": "colors",
