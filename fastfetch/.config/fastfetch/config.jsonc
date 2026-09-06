@@ -70,7 +70,12 @@
     },
     {
       "type": "display",
-      "key": "└ ›󰍹 DISPLAY",
+      "key": "├─󰍹 Monitor Principal",
+      "keyColor": "green"
+    },
+    {
+      "type": "display",
+      "key": "└─󰍹 Monitor Secundário",
       "keyColor": "green"
     },
     {
