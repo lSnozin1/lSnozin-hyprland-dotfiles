@@ -85,7 +85,7 @@
       "type": "media",
       "key": " │ › MUSIC ",
       "keyColor": "magenta",
-      "format": "Title  : {title:-50}\n   {#magenta}│{#}          {status} | {progress}\n   {#magenta}│{#}          Artist : {artist:-50}\n"
+      "format": "Title  : {title:-50}\n {#magenta}│ › MUSIC{#} : {status} | {progress}\n {#magenta}│ › MUSIC{#} : Artist : {artist:-50}\n"
     },
     {
       "type": "sound",
