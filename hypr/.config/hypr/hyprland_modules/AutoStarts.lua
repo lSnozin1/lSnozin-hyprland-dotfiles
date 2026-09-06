@@ -11,13 +11,22 @@
 -- Or execute your favorite apps at launch like this:
 --
 hl.on("hyprland.start", function()
+
+	--noctalia (only kinda slightly important (arguably more important than hyprland itself (not really but still)))
+	hl.exec_cmd("noctalia >/dev/null 2>&1 &")
+
+	-- keyring (kinda important)
+	hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP & gnome-keyring-daemon --start --components=secrets")
+
+	-- headless kitty (not that that important but helps with kitty performance)
+	hl.exec_cmd("kitty --class HeadlessKitty --single-instance tail -f /dev/null")
+
+	-- wallpaper (not that important)
+	hl.exec_cmd("sleep 5 && ~/Applications/waywallen-0.3.7-x86_64.AppImage --no-ui")
+	
+	-- Cliphist clipboard (not that important)
 	hl.exec_cmd("wl-paste --type text --watch cliphist store")
 	hl.exec_cmd("wl-paste --type image --watch cliphist store")
-	hl.exec_cmd("noctalia >/dev/null 2>&1 &")
-	hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP & gnome-keyring-daemon --start --components=secrets")
-	hl.exec_cmd("sleep 5 && ~/Applications/waywallen-0.3.7-x86_64.AppImage --no-ui")
-
-
 
 	-- 	hl.exec_cmd('linux-wallpaperengine --screen-root ' .. PRIMARY_MONITOR .. ' --scaling stretch --fullscreen-pause-only-active --fps 60 --assets-dir "/mnt/SO/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/assets" "/mnt/SO/Program Files (x86)/Steam/steamapps/workshop/content/431960/2799877694/"')	hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
 	-- 	hl.exec_cmd('linux-wallpaperengine --screen-root ' .. MONITOR2 .. ' --scaling stretch --fullscreen-pause-only-active --fps 60 --assets-dir "/mnt/SO/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/assets" "/mnt/SO/Program Files (x86)/Steam/steamapps/workshop/content/431960/2225690388/"') 
