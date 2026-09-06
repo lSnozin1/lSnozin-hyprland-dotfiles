@@ -28,6 +28,11 @@
       "format": "\u001b[1;32m 󰨇 Core Hardware\u001b[0m"
     },
     {
+      "type": "board",
+      "key": " │ ›󰍛 BOARD",
+      "keyColor": "green"
+    },
+    {
       "type": "cpu",
       "key": " │ ›󰻠 CPU ",
       "keyColor": "green"
