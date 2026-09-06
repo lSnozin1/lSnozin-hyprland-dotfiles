@@ -61,17 +61,7 @@ run_fastfetch() {
 render_wide() {
     local leftraw="$tmpdir/left.raw" rightraw="$tmpdir/right.raw"
 
-    # A coluna direita é posicionada diretamente no terminal, em vez de
-    # tentar calcular a largura visual da coluna esquerda.
-    #
-    # O valor leva em conta:
-    #   - imagem kitty: 30 colunas
-    #   - padding esquerdo da imagem: 3 colunas
-    #   - espaçamento interno do fastfetch
-    #   - módulos da coluna esquerda: ~62 colunas
-    #   - GAP entre as duas colunas
-    #
-    # ANSI usa posições de coluna começando em 1.
+    # Coluna onde a segunda coluna começa.
     local RIGHT_COLUMN=101
 
     # As duas colunas continuam sendo geradas em paralelo.
@@ -96,17 +86,16 @@ render_wide() {
     # Limpa a tela e volta para o canto superior esquerdo.
     printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
 
-    # A coluna esquerda é impressa exatamente como o fastfetch gerou.
-    # Isso preserva integralmente o protocolo gráfico do kitty.
+    # Imprime a coluna esquerda normalmente.
+    # Isso preserva integralmente o kitty-direct.
     cat "$leftraw"
 
-    # Cada linha da coluna direita recebe uma posição absoluta.
-    # Assim, imagem, ANSI, Nerd Fonts e qualquer sequência invisível
-    # existente na esquerda não conseguem deslocar a segunda coluna.
-    local r
-
-    for r in "${right_lines[@]}"; do
-        printf '%s%s\n' "${ESC}[${RIGHT_COLUMN}G" "$r"
+    # Posiciona cada linha da coluna direita usando coordenadas
+    # absolutas: linha + coluna.
+    local i r
+    for (( i = 0; i < ${#right_lines[@]}; i++ )); do
+        r="${right_lines[i]}"
+        printf '%s%s' "${ESC}[$((i + 1));${RIGHT_COLUMN}H" "$r"
     done
 }
 
