@@ -58,7 +58,7 @@
     },
     {
       "type": "custom",
-      "format": "\u001b[1;32m󱄄  MONITORS\u001b[0m"
+      "format": "\u001b[1;32m󱄄 MONITORS\u001b[0m"
     },
     {
       "type": "display",
