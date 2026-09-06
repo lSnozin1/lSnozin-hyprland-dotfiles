@@ -132,7 +132,7 @@ hl.window_rule({
 hl.window_rule({
 	name = "set-headless-kitty-workspace",
 	match = { class = "HeadlessKitty" },
-	workspace = WS.headless_kitty,
+	workspace = "special:headless_kitty silent",
 })
 
 
