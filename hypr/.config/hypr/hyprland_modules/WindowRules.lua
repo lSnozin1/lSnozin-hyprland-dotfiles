@@ -70,6 +70,13 @@ hl.window_rule({
 })
 
 
+-----------------------------
+---- Custom Window Rules ----
+-----------------------------
+
+--#region CustomVisibleWindowRules
+-- window rules that visible does things
+
 -- windows rule for Workspace 1 & 4 (firefox profiles)
 local perfil1 = "Main"
 local perfil1Workspace = WS.WEB
@@ -115,3 +122,5 @@ hl.window_rule({
 	match = { class = "discord" },
 	workspace = WS.DISCORD,
 })
+
+--#endregion
