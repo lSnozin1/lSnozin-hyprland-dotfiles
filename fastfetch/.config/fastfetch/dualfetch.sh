@@ -111,16 +111,18 @@ render_wide() {
         printf '%s%s' "${ESC}[$((i + 1));${RIGHT_COLUMN}H" "$r"
     done
 
-    # Devolve o cursor para uma posição previsível abaixo do conteúdo.
-    # Isso evita que o prompt do shell apareça no meio da segunda coluna.
-    local left_height right_height final_row
+    # O arquivo da coluna esquerda contém as sequências internas do
+    # protocolo kitty, portanto o número de linhas do arquivo não
+    # corresponde à altura visual do fastfetch.
+    #
+    # A coluna direita é texto normal, então sua quantidade de linhas
+    # continua sendo uma referência confiável.
+    local right_height final_row
 
-    left_height=$(wc -l < "$leftraw")
     right_height=${#right_lines[@]}
 
-    final_row=$left_height
-    (( right_height > final_row )) && final_row=$right_height
-    (( final_row += 1 ))
+    # Reserva algumas linhas extras abaixo da coluna direita.
+    final_row=$((right_height + 2))
 
     printf '%s' "${ESC}[${final_row};1H"
 }
