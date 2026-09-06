@@ -8,7 +8,7 @@
     "break",
     {
       "type": "custom",
-      "format": "\u001b[90m┌──────────────────────Hardware──────────────────────┐"
+      "format": "\u001b[90m┌────────────────────────── Hardware ──────────────────────────┐"
     },
     {
       "type": "host",
@@ -16,38 +16,63 @@
       "keyColor": "green"
     },
     {
+      "type": "custom",
+      "format": "\u001b[1;32m󰨇 Core Hardware\u001b[0m"
+    },
+    {
       "type": "cpu",
-      "key": "│ ├󰻠 ",
+      "key": "│ ›󰻠 CPU ",
       "keyColor": "green"
     },
     {
       "type": "gpu",
-      "key": "│ ├󰢮  GPU",
+      "key": "│ ›󰢮 GPU",
       "keyColor": "green"
     },
     {
       "type": "memory",
-      "key": "│ ├󰑭 ",
+      "key": "│ ›󰑭 MEM",
+      "keyColor": "green"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[1;32m󰋊 DISKS\u001b[0m"
+    },
+    {
+      "type": "disk",
+      "folders": "/",
+      "key": "│ ›󰋊 SSD Sistema",
       "keyColor": "green"
     },
     {
       "type": "disk",
-      "key": "└ └󰋊 ",
+      "folders": "/mnt/dados",
+      "key": "│ ›󰋊 SSD Dados",
       "keyColor": "green"
     },
     {
-      "type": "display",
-      "key": "└ └󰍹 ",
+      "type": "disk",
+      "folders": "/mnt/SO",
+      "key": "│ ›󰋊 SSD Windows",
       "keyColor": "green"
     },
     {
       "type": "custom",
-      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
+      "format": "\u001b[1;32m󱄄  MONITORS\u001b[0m"
+    },
+    {
+      "type": "display",
+      "key": "└ ›󰍹 DISPLAY",
+      "keyColor": "green"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[90m└──────────────────────────────────────────────────────────────┘"
     },
     "break",
     {
       "type": "custom",
-      "format": "\u001b[90m┌────────────────────Uptime / Age / DT────────────────────┐"
+      "format": "\u001b[90m┌──────────────────────── Date / Time ────────────────────────┐"
     },
     {
       "type": "command",
@@ -67,12 +92,12 @@
     },
     {
       "type": "custom",
-      "format": "\u001b[90m└─────────────────────────────────────────────────────────┘"
+      "format": "\u001b[90m└─────────────────────────────────────────────────────────────┘"
     },
     "break",
     {
       "type": "custom",
-      "format": "\u001b[90m┌──────────────────────Software──────────────────────┐"
+      "format": "\u001b[90m┌──────────────────────── Software ────────────────────────┐"
     },
     {
       "type": "os",
@@ -127,7 +152,7 @@
     },
     {
       "type": "custom",
-      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
+      "format": "\u001b[90m└─────────────────────────────────────────────────────────┘"
     },
     {
       "type": "colors",
