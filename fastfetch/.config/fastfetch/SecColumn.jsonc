@@ -84,7 +84,8 @@
     {
       "type": "media",
       "key": " │ › MUSIC ",
-      "keyColor": "magenta"
+      "keyColor": "magenta",
+      "format": "{combined:-50}"
     },
     {
       "type": "sound",
