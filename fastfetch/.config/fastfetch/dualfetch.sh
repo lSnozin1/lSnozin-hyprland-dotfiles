@@ -60,52 +60,54 @@ run_fastfetch() {
 
 render_wide() {
     local leftraw="$tmpdir/left.raw" rightraw="$tmpdir/right.raw"
-    local leftstripped="$tmpdir/left.stripped"
 
-    # as duas colunas rodam em paralelo — corta o tempo total quase pela metade
+    # A coluna direita é posicionada diretamente no terminal, em vez de
+    # tentar calcular a largura visual da coluna esquerda.
+    #
+    # O valor leva em conta:
+    #   - imagem kitty: 30 colunas
+    #   - padding esquerdo da imagem: 3 colunas
+    #   - espaçamento interno do fastfetch
+    #   - módulos da coluna esquerda: ~62 colunas
+    #   - GAP entre as duas colunas
+    #
+    # ANSI usa posições de coluna começando em 1.
+    local RIGHT_COLUMN=101
+
+    # As duas colunas continuam sendo geradas em paralelo.
     run_fastfetch "$LEFT_CONFIG" "$leftraw" "$CAPTURE_WIDTH" &
     local pid_left=$!
+
     run_fastfetch "$RIGHT_CONFIG" "$rightraw" "$CAPTURE_WIDTH" &
     local pid_right=$!
+
     wait "$pid_left"
     wait "$pid_right"
 
-    # se alguma chamada falhou ou estourou o timeout, cai pro fastfetch padrão
-    # (1 coluna só) em vez de mostrar uma tela quebrada ou vazia
+    # Se alguma chamada falhou ou estourou o timeout, cai para o
+    # fastfetch padrão em vez de mostrar uma tela quebrada.
     if [[ ! -s "$leftraw" || ! -s "$rightraw" ]]; then
         timeout "${FASTFETCH_TIMEOUT}s" fastfetch
         return
     fi
 
-    strip_ansi "$leftraw" >"$leftstripped"
-
-    mapfile -t left_lines < "$leftraw"
     mapfile -t right_lines < "$rightraw"
-    mapfile -t left_stripped < "$leftstripped"
 
-    local left_width=0 len line
-    for line in "${left_stripped[@]}"; do
-        len=${#line}
-        (( len > left_width )) && left_width=$len
+    # Limpa a tela e volta para o canto superior esquerdo.
+    printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
+
+    # A coluna esquerda é impressa exatamente como o fastfetch gerou.
+    # Isso preserva integralmente o protocolo gráfico do kitty.
+    cat "$leftraw"
+
+    # Cada linha da coluna direita recebe uma posição absoluta.
+    # Assim, imagem, ANSI, Nerd Fonts e qualquer sequência invisível
+    # existente na esquerda não conseguem deslocar a segunda coluna.
+    local r
+
+    for r in "${right_lines[@]}"; do
+        printf '%s%s\n' "${ESC}[${RIGHT_COLUMN}G" "$r"
     done
-    (( left_width += GAP ))
-
-    local total=${#left_lines[@]}
-    (( ${#right_lines[@]} > total )) && total=${#right_lines[@]}
-
-    local out="" i l r ls pad
-    for (( i = 0; i < total; i++ )); do
-        l="${left_lines[i]-}"
-        ls="${left_stripped[i]-}"
-        r="${right_lines[i]-}"
-        pad=$(( left_width - ${#ls} ))
-        (( pad < 0 )) && pad=0
-        out+="${l}$(printf '%*s' "$pad" '')${r}"$'\n'
-    done
-
-    # limpa a tela e imprime tudo numa única chamada (evita ficar
-    # com a tela em branco caso algo falhe entre o clear e o print)
-    printf '%s%s' "${ESC}[2J${ESC}[3J${ESC}[H" "$out"
 }
 
 render_narrow() {
