@@ -166,16 +166,21 @@
     "break",
     {
       "type": "custom",
-      "format": "\u001b[90m┌────────────────────────── Extras ───────────────────────────┐"
+      "format": "\u001b[90m┌──────────────────────────── Extras ───────────────────────────┐"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[1;35m 󱖏 MIDIA\u001b[0m"
     },
     {
       "type": "media",
       "key": " │ › MUSIC ",
-      "keyColor": "magenta"
+      "keyColor": "magenta",
+      "format": "Title  : {title:-50}\n {#magenta}│ › MUSIC{#} : {status} | {progress}\n {#magenta}│ › MUSIC{#} : Artist : {artist:-50}\n {#magenta}│{#}"
     },
     {
       "type": "sound",
-      "key": " │ › SOUND ",
+      "key": " └ › SOUND ",
       "keyColor": "magenta"
     },
     {

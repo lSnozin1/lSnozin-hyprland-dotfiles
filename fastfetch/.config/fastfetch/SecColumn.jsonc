@@ -71,8 +71,6 @@
       "format": "\u001b[90m└──────────────────────────────────────────────────────────┘"
     },
     "break",
-    "break",
-    "break",
     {
       "type": "custom",
       "format": "\u001b[90m┌──────────────────────────── Extras ───────────────────────────┐"
@@ -85,7 +83,7 @@
       "type": "media",
       "key": " │ › MUSIC ",
       "keyColor": "magenta",
-      "format": "Title  : {title:-50}\n {#magenta}│ › MUSIC{#} : {status} | {progress}\n {#magenta}│ › MUSIC{#} : Artist : {artist:-50}"
+      "format": "Title  : {title:-50}\n {#magenta}│ › MUSIC{#} : {status} | {progress}\n {#magenta}│ › MUSIC{#} : Artist : {artist:-50}\n {#magenta}│{#}"
     },
     {
       "type": "sound",
