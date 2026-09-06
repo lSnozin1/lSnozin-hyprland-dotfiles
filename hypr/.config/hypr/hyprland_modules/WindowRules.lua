@@ -129,11 +129,7 @@ hl.window_rule({
 -- window rules that does invisible things
 
 -- window rule for headless kitty to be put on it's own special workspace
-hl.window_rule({
-	name = "set-headless-kitty-workspace",
-	match = { class = "HeadlessKitty" },
-	workspace = "special:headless_kitty silent",
-})
+
 
 
 --#endregion

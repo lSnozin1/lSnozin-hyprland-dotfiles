@@ -19,7 +19,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP & gnome-keyring-daemon --start --components=secrets")
 
 	-- headless kitty (not that that important but helps with kitty performance)
-	hl.exec_cmd("kitty --class HeadlessKitty --single-instance tail -f /dev/null")
+	hl.exec_cmd("kitty --start-as=hidden --single-instance")
 
 	-- wallpaper (not that important)
 	hl.exec_cmd("sleep 5 && ~/Applications/waywallen-0.3.7-x86_64.AppImage --no-ui")
