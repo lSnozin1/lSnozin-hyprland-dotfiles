@@ -46,31 +46,15 @@ strip_ansi() {
     sed -E "s/${ESC}\[[0-9;]*[a-zA-Z]//g" "$1"
 }
 
-run_with_timeout() {
-    # substitui o "timeout" do coreutils: mata o comando se ele passar
-    # do prazo, mas sem virar o processo pai dele (o que confundia a
-    # detecção de shell do fastfetch)
-    local secs="$1"; shift
-    "$@" &
-    local cmd_pid=$!
-    ( sleep "$secs"; kill -TERM "$cmd_pid" 2>/dev/null ) &
-    local watchdog_pid=$!
-    wait "$cmd_pid" 2>/dev/null
-    local status=$?
-    kill "$watchdog_pid" 2>/dev/null
-    wait "$watchdog_pid" 2>/dev/null
-    return "$status"
-}
-
 run_fastfetch() {
     # $1 = arquivo de config | $2 = arquivo de saída | $3 = largura forçada (opcional)
     local config="$1" outfile="$2" cols="${3:-}"
     if [[ -n "$cols" ]]; then
-        COLUMNS="$cols" run_with_timeout "$FASTFETCH_TIMEOUT" fastfetch \
-            -c "$config" --processing-timeout 1000 --pipe false >"$outfile" 2>/dev/null
+        COLUMNS="$cols" timeout "${FASTFETCH_TIMEOUT}s" fastfetch \
+            -c "$config" --pipe false >"$outfile" 2>/dev/null
     else
-        run_with_timeout "$FASTFETCH_TIMEOUT" fastfetch \
-            -c "$config" --processing-timeout 1000 --pipe false >"$outfile" 2>/dev/null
+        timeout "${FASTFETCH_TIMEOUT}s" fastfetch \
+            -c "$config" --pipe false >"$outfile" 2>/dev/null
     fi
 }
 
