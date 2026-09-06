@@ -62,11 +62,33 @@ render_wide() {
     local leftraw="$tmpdir/left.raw"
     local rightraw="$tmpdir/right.raw"
 
-    # Posição fixa da segunda coluna.
+    # Detecta o arquivo usado pelo logo no config do Fastfetch.
     #
-    # Tanto o PNG (kitty-direct) quanto o ASCII devem respeitar
-    # o mesmo espaço reservado para a coluna esquerda.
-    local RIGHT_COLUMN=120
+    # O PNG tem 30 colunas de largura.
+    # O miku.txt tem 44 colunas de largura.
+    #
+    # Como o ASCII é 14 colunas mais largo, deslocamos a coluna direita
+    # exatamente essas 14 colunas quando o source for um arquivo de texto.
+    local logo_source
+    local logo_ext
+    local RIGHT_COLUMN
+
+    logo_source=$(
+        sed -nE 's/^[[:space:]]*"source"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' \
+            "$LEFT_CONFIG" | head -n1
+    )
+
+    logo_ext="${logo_source##*.}"
+    logo_ext="${logo_ext,,}"
+
+    case "$logo_ext" in
+        txt|text|ascii)
+            RIGHT_COLUMN=120
+            ;;
+        *)
+            RIGHT_COLUMN=106
+            ;;
+    esac
 
     # A coluna esquerda usa largura grande para preservar o logo
     # e impedir truncamento.
@@ -97,7 +119,8 @@ render_wide() {
     # Limpa a tela e volta para o canto superior esquerdo.
     printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
 
-    # Imprime a coluna esquerda exatamente como o fastfetch gerou.
+    # Imprime a coluna esquerda exatamente como o Fastfetch gerou.
+    # Isso preserva tanto o ASCII quanto o kitty-direct.
     cat "$leftraw"
 
     # Imprime a coluna direita usando posição absoluta.
@@ -109,9 +132,8 @@ render_wide() {
         printf '%s%s' "${ESC}[$((i + 1));${RIGHT_COLUMN}H" "$r"
     done
 
-    # A altura da coluna esquerda não é confiável quando há
-    # kitty-direct. A coluna direita é texto normal e serve
-    # como referência para posicionar o cursor no final.
+    # O arquivo da esquerda pode conter sequências internas do protocolo
+    # Kitty, então não usamos wc -l para determinar sua altura visual.
     local right_height final_row
 
     right_height=${#right_lines[@]}
