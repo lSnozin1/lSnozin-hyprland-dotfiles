@@ -61,19 +61,47 @@ run_fastfetch() {
 render_wide() {
     local leftraw="$tmpdir/left.raw"
     local rightraw="$tmpdir/right.raw"
+    local leftstripped="$tmpdir/left.stripped"
 
-    # Posição horizontal da segunda coluna.
-    # Aumentado para deixar um espaço mais confortável após a coluna esquerda.
-    local RIGHT_COLUMN=106
+    # A coluna direita usa:
+    #
+    #   - posição fixa quando o logo é kitty-direct
+    #   - largura real da saída quando o logo é ASCII/texto
+    #
+    # O kitty-direct não pode ser medido corretamente como texto porque
+    # a imagem ocupa células do terminal sem aparecer como caracteres.
+    local RIGHT_COLUMN
 
-    # A coluna esquerda contém a imagem kitty, então continua usando
-    # a largura artificial grande para impedir que o fastfetch corte
-    # ou altere o layout da imagem.
+    if grep -Eq '"type"[[:space:]]*:[[:space:]]*"kitty-direct"' "$LEFT_CONFIG"; then
+        # Layout com imagem PNG via protocolo gráfico do Kitty.
+        RIGHT_COLUMN=106
+    else
+        # Layout textual/ASCII.
+        #
+        # Nesse caso podemos medir a maior linha visual da saída esquerda
+        # porque o ASCII realmente faz parte do texto produzido pelo
+        # fastfetch.
+        strip_ansi "$leftraw" >"$leftstripped"
+
+        local left_width=0
+        local line len
+
+        while IFS= read -r line; do
+            len=${#line}
+            (( len > left_width )) && left_width=$len
+        done < "$leftstripped"
+
+        # Espaço entre as duas colunas.
+        RIGHT_COLUMN=$((left_width + GAP + 1))
+    fi
+
+    # A coluna esquerda usa largura grande para preservar o layout da
+    # imagem ou do ASCII sem truncamento.
     local LEFT_CAPTURE_WIDTH="$CAPTURE_WIDTH"
 
-    # A coluna direita não tem imagem. Usamos uma largura mais próxima
-    # da área real disponível para impedir que módulos longos, como
-    # "media", gerem linhas enormes que acabam fazendo wrap.
+    # A coluna direita não possui imagem, então usamos uma largura menor
+    # para evitar que módulos longos gerem linhas desnecessariamente
+    # grandes.
     local RIGHT_CAPTURE_WIDTH=80
 
     # As duas colunas continuam sendo geradas em paralelo.
@@ -99,11 +127,12 @@ render_wide() {
     printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
 
     # A coluna esquerda é impressa exatamente como o fastfetch gerou.
-    # Isso preserva integralmente o protocolo gráfico kitty.
+    # Isso preserva o protocolo gráfico do Kitty quando houver PNG.
     cat "$leftraw"
 
     # Imprime a coluna direita usando posição absoluta.
     local i r
+
     for (( i = 0; i < ${#right_lines[@]}; i++ )); do
         r="${right_lines[i]}"
 
@@ -111,17 +140,12 @@ render_wide() {
         printf '%s%s' "${ESC}[$((i + 1));${RIGHT_COLUMN}H" "$r"
     done
 
-    # O arquivo da coluna esquerda contém as sequências internas do
-    # protocolo kitty, portanto o número de linhas do arquivo não
-    # corresponde à altura visual do fastfetch.
-    #
-    # A coluna direita é texto normal, então sua quantidade de linhas
-    # continua sendo uma referência confiável.
+    # O arquivo da esquerda pode conter sequências internas do protocolo
+    # Kitty, então não usamos wc -l para determinar a altura visual dele.
+    # A coluna direita é texto normal e fornece uma referência confiável.
     local right_height final_row
 
     right_height=${#right_lines[@]}
-
-    # Reserva algumas linhas extras abaixo da coluna direita.
     final_row=$((right_height + 2))
 
     printf '%s' "${ESC}[${final_row};1H"
