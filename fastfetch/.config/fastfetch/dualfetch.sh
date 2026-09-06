@@ -3,7 +3,7 @@
 # dualfetch.sh — substituto em shell do antigo dualfetch.py
 #
 # Roda o fastfetch duas vezes (config.jsonc = coluna esquerda,
-# software.jsonc = coluna direita) e funde a saída lado a lado quando
+# SecColumn.jsonc = coluna direita) e funde a saída lado a lado quando
 # o terminal é largo o suficiente; caso contrário usa o fallback
 # empilhado (logo-only.jsonc + narrow-modules.jsonc).
 #
@@ -25,7 +25,7 @@ export LC_ALL=C.UTF-8
 
 CONFIG_DIR="$HOME/.config/fastfetch"
 LEFT_CONFIG="$CONFIG_DIR/config.jsonc"
-RIGHT_CONFIG="$CONFIG_DIR/software.jsonc"
+RIGHT_CONFIG="$CONFIG_DIR/SecColumn.jsonc"
 LOGO_ONLY_CONFIG="$CONFIG_DIR/logo-only.jsonc"
 NARROW_MODULES_CONFIG="$CONFIG_DIR/narrow-modules.jsonc"
 
