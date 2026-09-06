@@ -85,7 +85,7 @@
       "type": "media",
       "key": " │ › MUSIC ",
       "keyColor": "magenta",
-      "format": "{combined:-50}"
+      "format": "Title  : {title:-50}\nArtist : {artist:-50}\nAlbum  : {album:-50}"
     },
     {
       "type": "sound",
