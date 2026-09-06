@@ -124,3 +124,16 @@ hl.window_rule({
 })
 
 --#endregion
+
+--#region CustomInvisibleWindowRules
+-- window rules that does invisible things
+
+-- window rule for headless kitty to be put on it's own special workspace
+hl.window_rule({
+	name = "set-headless-kitty-workspace",
+	match = { class = "HeadlessKitty" },
+	workspace = WS.headless_kitty,
+})
+
+
+--#endregion
