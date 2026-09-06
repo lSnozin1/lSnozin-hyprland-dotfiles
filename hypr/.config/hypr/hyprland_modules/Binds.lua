@@ -57,9 +57,12 @@ for i = 1, 10 do
 end
 
 
--- Example special workspace (scratchpad)
+-- Special Workspaces (scratchpads)
 hl.bind(mainMod .. " + S", 						hl.dsp.workspace.toggle_special("magic"), { description = "Toggle special workspace 'magic'" })
 hl.bind(mainMod .. " + SHIFT + S", 				hl.dsp.window.move({ workspace = "special:magic" }), { description = "Move window to special workspace 'magic'" })
+
+hl.bind(mainMod .. " + G + 1", 						hl.dsp.workspace.toggle_special("kitty"), { description = "Toggle special workspace 'kitty'" })
+hl.bind(mainMod .. " + SHIFT + D", 				hl.dsp.window.move({ workspace = "special:kitty" }), { description = "Move window to special workspace 'kitty'" })
 
 -------------------
 ---- UTILITIES ----
