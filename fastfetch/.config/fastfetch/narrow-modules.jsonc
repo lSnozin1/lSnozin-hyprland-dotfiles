@@ -1,196 +1,87 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
-    "type": "none"
+    "type": "kitty",
+    "source": "~/.config/fastfetch/fetch.png",
+    "width": 30,
+    "height": 15,
+    "padding": {
+      "top": 1,
+      "left": 3
+    },
+    "color": {
+      "1": "cyan"
+    }
+  },
+  "display": {
+    "separator": " "
   },
   "modules": [
-    "title",
-    "break",
     {
       "type": "custom",
-      "format": "\u001b[90m┌────────────────────────── Hardware ──────────────────────────┐"
+      "format": "\u001b[38;5;211m╭───────────╮\u001b[0m"
     },
     {
-      "type": "host",
-      "key": " 󰌢  PC",
-      "keyColor": "green"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[1;32m 󰨇 Core Hardware\u001b[0m"
-    },
-    {
-      "type": "cpu",
-      "key": " │ ›󰻠 CPU ",
-      "keyColor": "green"
-    },
-    {
-      "type": "gpu",
-      "key": " │ ›󰢮 GPU",
-      "keyColor": "green"
-    },
-    {
-      "type": "memory",
-      "key": " │ ›󰑭 MEM",
-      "keyColor": "green"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[1;32m 󰋊 DISKS\u001b[0m"
-    },
-    {
-      "type": "disk",
-      "folders": "/",
-      "key": " │ ›󰋊 SSD Sistema",
-      "keyColor": "green"
-    },
-    {
-      "type": "disk",
-      "folders": "/mnt/dados",
-      "key": " │ ›󰋊 SSD Dados",
-      "keyColor": "green"
-    },
-    {
-      "type": "disk",
-      "folders": "/mnt/SO",
-      "key": " │ ›󰋊 SSD Windows",
-      "keyColor": "green"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[1;32m 󱄄 MONITORS\u001b[0m"
-    },
-    {
-      "type": "display",
-      "key": " └ ›󰍹 DISPLAY",
-      "keyColor": "green"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[90m└──────────────────────────────────────────────────────────────┘"
-    },
-    "break",
-    {
-      "type": "custom",
-      "format": "\u001b[90m┌──────────────────────── Date / Time ─────────────────────────┐"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[1;35m  DATE/TIME\u001b[0m"
-    },
-    {
-      "type": "command",
-      "key": " │ › OS Age  ",
+      "type": "title",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[211m  user   \u001b[38;5;211m│\u001b[0m",
       "keyColor": "magenta",
-      "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
-    },
-    {
-      "type": "uptime",
-      "key": " │ › Uptime  ",
-      "keyColor": "magenta"
-    },
-    {
-      "type": "datetime",
-      "key": " └ › DateTime  ",
-      "keyColor": "magenta"
+      "format": "{user-name}@{host-name}"
     },
     {
       "type": "custom",
-      "format": "\u001b[90m└──────────────────────────────────────────────────────────────┘"
-    },
-    "break",
-    {
-      "type": "custom",
-      "format": "\u001b[90m┌────────────────────────── Internals ─────────────────────────┐"
+      "format": "\u001b[38;5;211m├───────────┤\u001b[0m"
     },
     {
       "type": "os",
-      "key": " OS ",
-      "keyColor": "yellow"
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[37m󰻀  distro \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "red",
+      "format": "{name} {arch}"
     },
     {
       "type": "kernel",
-      "key": " │ ›󰌽 ",
-      "keyColor": "yellow"
-    },
-    {
-      "type": "bios",
-      "key": " │ ›󰖡 ",
-      "keyColor": "yellow"
-    },
-    {
-      "type": "packages",
-      "key": " │ ›󰏗 ",
-      "keyColor": "yellow"
-    },
-    {
-      "type": "command",
-      "key": " └ ›󰞷 ",
-      "keyColor": "yellow",
-      "text": "$SHELL --version | sed 's/, version//'"
-    },
-    "break",
-    {
-      "type": "custom",
-      "format": "\u001b[1;34m  SOFTWARE\u001b[0m"
-    },
-    {
-      "type": "de",
-      "key": " 󰧨  DE",
-      "keyColor": "blue"
-    },
-    {
-      "type": "lm",
-      "key": " │ ›󰍁 ",
-      "keyColor": "blue"
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[37m󰌢  kernel \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "magenta",
+      "format": "{release}"
     },
     {
       "type": "wm",
-      "key": " │ ›󱂬 ",
-      "keyColor": "blue"
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[36m  WM     \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "cyan",
+      "format": "{pretty-name}"
     },
     {
-      "type": "wmtheme",
-      "key": " │ ›󰉦 ",
-      "keyColor": "blue"
+      "type": "packages",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[36m󰏖  pkgs   \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "cyan",
+      "format": "{pacman} (pacman)"
     },
     {
-      "type": "terminal",
-      "key": " └ ›󰆍 ",
-      "keyColor": "blue"
+      "type": "command",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[33m  shell  \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "yellow",
+      "text": "basename \"$SHELL\""
     },
     {
-      "type": "custom",
-      "format": "\u001b[90m└──────────────────────────────────────────────────────────────┘"
-    },
-    "break",
-    {
-      "type": "custom",
-      "format": "\u001b[90m┌──────────────────────────── Extras ───────────────────────────┐"
+        "type": "command",
+        "key": "\u001b[38;5;211m│\u001b[0m \u001b[33m󰍛  RAM    \u001b[38;5;211m│\u001b[0m",
+        "keyColor": "yellow",
+        "text": "ram=$(free -h | awk '/Mem:/ {print $3 \"/\" $2}'); swap=$(free -h | awk '/Swap:/ {print $3 \"/\" $2}'); ram_pct=$(free | awk '/Mem:/ {printf \"%.0f\", $3/$2*100}'); swap_pct=$(free | awk '/Swap:/ && $2>0 {printf \"%.0f\", $3/$2*100}'); echo -e \"$ram | $swap (\\033[33m$ram_pct%\\033[0m|\\033[33m$swap_pct%\\033[0m)\""
     },
     {
-      "type": "custom",
-      "format": "\u001b[1;35m 󱖏 MIDIA\u001b[0m"
+      "type": "uptime",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[32m󰦖  uptime \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "green",
+      "format": "{days} day(s), {hours} hour(s), {minutes} minute(s)"
     },
     {
-      "type": "media",
-      "key": " │ › MUSIC ",
-      "keyColor": "magenta",
-      "format": "Title  : {title:-50}\n {#magenta}│ › MUSIC{#} : {status} | {progress}\n {#magenta}│ › MUSIC{#} : Artist : {artist:-50}\n {#magenta}│{#}"
-    },
-    {
-      "type": "sound",
-      "key": " └ › SOUND ",
-      "keyColor": "magenta"
+      "type": "command",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[32m󰦖  OS age \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "green",
+      "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo \"$days_difference day(s)\""
     },
     {
       "type": "custom",
-      "format": "\u001b[90m└───────────────────────────────────────────────────────────────┘"
-    },
-    {
-      "type": "colors",
-      "paddingLeft": 2,
-      "symbol": "circle"
+      "format": "\u001b[38;5;211m╰───────────╯\u001b[0m"
     }
   ]
 }

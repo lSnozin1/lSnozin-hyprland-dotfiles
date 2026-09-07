@@ -1,64 +1,68 @@
 #!/usr/bin/env bash
-#
-# dualfetch.sh — substituto em shell do antigo dualfetch.py
-#
-# Roda o fastfetch duas vezes (config.jsonc = coluna esquerda,
-# SecColumn.jsonc = coluna direita) e funde a saída lado a lado quando
-# o terminal é largo o suficiente; caso contrário usa o fallback
-# empilhado (logo-only.jsonc + narrow-modules.jsonc).
-#
-# Projetado pra nunca travar o terminal:
-#   - toda chamada ao fastfetch tem timeout (FASTFETCH_TIMEOUT)
-#   - não existe nenhum loop de espera artificial (usa tput cols direto)
-#   - as duas colunas rodam em paralelo, não em série
-#   - arquivos temporários são sempre limpos, mesmo em erro/Ctrl+C
 
+# this is the 'core' of this fastfetch configuration, the main idea behind it is that fastfetch does not have a native way to display two 'columns'
+# so this script runs fastfetch twice, once with the left column config and once with the right column config
+# and then merges the output side by side when the terminal is wide enough, or stacks them when the terminal is narrow.
+# it uses shell as its the most optimized way to do this
+
+# god knows how much AI helped with this script, and even the text in the comments
+# but also, only god knows why native fastfetch is so limited, and why it doesn't have a native way to do this
+# so yea, it is what it is, could be worse, could be better, but it works
+
+# because it runs a script on top of the terminal, there has a chance for it to freeze the terminal for n reasons (like a overworked computer or smh)
+# so it was projected to not freeze the terminal with some precautions:
+#   - the two columns run in parallel 
+#   - temporary files are always cleaned, even on error/Ctrl+C
+#   - every fastfetch call has a timeout (FASTFETCH_TIMEOUT)
+# if the timeout is reached, the terminal will open without the fastfetch, not freezing the terminal
+
+# bash thingy to make unexistent variables give a error and not silent treatment
 set -u
 
-# Força uma locale UTF-8 dentro do script, não importa o que o ambiente
-# de fora tenha configurado. Sem isso, "${#string}" no bash conta BYTES
-# em vez de CARACTERES pra qualquer coisa multi-byte (ícones Nerd Font,
-# bordas ┌─┐ etc.) sempre que a locale ativa não é UTF-8 — e isso quebra
-# o alinhamento das colunas de um jeito sutil e difícil de notar.
-# C.UTF-8 vem embutida na glibc e não depende de locale-gen.
+# forces UTF-8 inside the script, no matter the outside environment.
+# without this, 'special characters' like nerd font icons, ascii art, all these characters beyond typical letters and numbers
+# would be treated differently and would possibly break partially the fastfetch
+# although it's kinda useless since the fastfetch config itself is already set to use UTF-8, but just in case, this is here
 export LC_ALL=C.UTF-8
 
+# makes the .config fastfetch folder a variable
 CONFIG_DIR="$HOME/.config/fastfetch"
+
+# makes the left, right and narrow modules config files variables
 LEFT_CONFIG="$CONFIG_DIR/config.jsonc"
 RIGHT_CONFIG="$CONFIG_DIR/SecColumn.jsonc"
-LOGO_ONLY_CONFIG="$CONFIG_DIR/logo-only.jsonc"
 NARROW_MODULES_CONFIG="$CONFIG_DIR/narrow-modules.jsonc"
 
-GAP=4                 # espaço entre a coluna esquerda e a direita
-WIDE_THRESHOLD=160     # abaixo disso, cai pro layout empilhado (1 coluna)
-CAPTURE_WIDTH=300      # largura "falsa" passada ao fastfetch pra ele não truncar
-FASTFETCH_TIMEOUT=2    # segundos — teto absoluto por chamada ao fastfetch
+# sets the threshold for the terminal width to switch between wide and 'narrow' mode
+WIDE_THRESHOLD=160
 
+# counted as seconds, the ceiling for this entire thing to run, if it takes longer than this, it will just open the terminal without fastfetch
+FASTFETCH_TIMEOUT=2
+
+# sets the esc button as a variable, so it can be used in the script without having to write the escape sequence every time
 ESC=$'\033'
 
-# --- diretório temporário, sempre limpo ao sair (erro, Ctrl+C, timeout...) ---
+# Temporary directory to store the output of the two fastfetch calls, will be cleaned up on exit
+# uses TMPDIR if it already exists, otherwise creates it on /tmp, the XXXXXX sets a random suffix
+# || exit 1 makes the script exit if the temporary directory cannot be created
 tmpdir=$(mktemp -d "${TMPDIR:-/tmp}/dualfetch.XXXXXX") || exit 1
+
+# deletes the temporary directory on exit, even if the script is interrupted by Ctrl+C or any other signal
 trap 'rm -rf "$tmpdir"' EXIT
 
-strip_ansi() {
-    # remove sequências de escape ANSI de um arquivo — só usado pra medir
-    # a largura visível de cada linha, nunca pro texto que é impresso
-    sed -E "s/${ESC}\[[0-9;]*[a-zA-Z]//g" "$1"
-}
-
+# sets run fastfetch as a function to be able to call it with different parameters, pretty much the main part of the script
 run_fastfetch() {
-    # $1 = arquivo de config | $2 = arquivo de saída | $3 = largura forçada (opcional)
-    local config="$1" outfile="$2" cols="${3:-}"
-    if [[ -n "$cols" ]]; then
-        COLUMNS="$cols" timeout "${FASTFETCH_TIMEOUT}s" fastfetch \
-            -c "$config" --pipe false >"$outfile" 2>/dev/null
-    else
-        timeout "${FASTFETCH_TIMEOUT}s" fastfetch \
-            -c "$config" --pipe false >"$outfile" 2>/dev/null
-    fi
+    # $1 = config file | $2 = output file
+    local config="$1" outfile="$2"
+
+    # sets the timeout for the fastfetch call, if it takes longer than this, it will just open the terminal without fastfetch
+    timeout "${FASTFETCH_TIMEOUT}s" fastfetch \
+        -c "$config" --pipe false >"$outfile" 2>/dev/null
 }
 
+# renders the two columns side by side when the terminal is wide enough
 render_wide() {
+    # creates temporary files for the left and right columns, will be cleaned up on exit
     local leftraw="$tmpdir/left.raw"
     local rightraw="$tmpdir/right.raw"
 
@@ -69,18 +73,22 @@ render_wide() {
     #
     # Como o ASCII é 14 colunas mais largo, deslocamos a coluna direita
     # exatamente essas 14 colunas quando o source for um arquivo de texto.
+
+    # creates a variable for the logo source, logo extension and the right column start position
     local logo_source
     local logo_ext
     local RIGHT_COLUMN
 
-    logo_source=$(
-        sed -nE 's/^[[:space:]]*"source"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' \
-            "$LEFT_CONFIG" | head -n1
-    )
+    # finds the logo source on the config.jsonc file, sets it as a variable
+    logo_source=$( sed -nE 's/^[[:space:]]*"source"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' \ "$LEFT_CONFIG" | head -n1 )
 
+    # finds the logo extension, sets it as a variable
     logo_ext="${logo_source##*.}"
+    # converts the logo extension to lowercase, so it can be compared with the case statement
     logo_ext="${logo_ext,,}"
 
+    # sets the right column start position based on the logo extension, if it's a text file, it will be 14 columns to the right
+    # needed becase miku is WIDE, though if a different png or ascii is used, it will not be adjusted dynamically, so you'll need to change it manually here
     case "$logo_ext" in
         txt|text|ascii)
             RIGHT_COLUMN=120
@@ -90,46 +98,45 @@ render_wide() {
             ;;
     esac
 
-    # A coluna esquerda usa largura grande para preservar o logo
-    # e impedir truncamento.
-    local LEFT_CAPTURE_WIDTH="$CAPTURE_WIDTH"
-
-    # A coluna direita não possui imagem.
-    local RIGHT_CAPTURE_WIDTH=80
-
-    # As duas colunas continuam sendo geradas em paralelo.
-    run_fastfetch "$LEFT_CONFIG" "$leftraw" "$LEFT_CAPTURE_WIDTH" &
+    # Runs fastfetch for the left column in the background
+    run_fastfetch "$LEFT_CONFIG" "$leftraw" &
+    # stores the process id that that was just executed
     local pid_left=$!
 
-    run_fastfetch "$RIGHT_CONFIG" "$rightraw" "$RIGHT_CAPTURE_WIDTH" &
+    # same for the right column
+    run_fastfetch "$RIGHT_CONFIG" "$rightraw" &
     local pid_right=$!
 
+    # now that both processes are running in the background simultaneously, the script waits for them to finish
     wait "$pid_left"
     wait "$pid_right"
+    # this makes the processes run in parallel, reducing the total time it takes to render both columns
 
-    # Se alguma chamada falhou ou estourou o timeout, cai para o
-    # fastfetch padrão.
+    # confirms if the above processes created the output files, if not, it will just open the terminal without fastfetch
     if [[ ! -s "$leftraw" || ! -s "$rightraw" ]]; then
         timeout "${FASTFETCH_TIMEOUT}s" fastfetch
         return
     fi
 
+    # transforms the right column output into an array
     mapfile -t right_lines < "$rightraw"
 
-    # Limpa a tela e volta para o canto superior esquerdo.
+    # H moves the cursor to the top left corner of the terminal, 2J clears the screen, 3J clears the scrollback buffer
     printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
 
-    # Imprime a coluna esquerda exatamente como o Fastfetch gerou.
-    # Isso preserva tanto o ASCII quanto o kitty-direct.
+    # prints the left column output, which is already formatted by fastfetch, so it can be printed as is
     cat "$leftraw"
 
-    # Imprime a coluna direita usando posição absoluta.
-    local i r
+    # creates two variables, line_index for the loop index and line_current for the current line of the right column
+    local line_index line_current
 
-    for (( i = 0; i < ${#right_lines[@]}; i++ )); do
-        r="${right_lines[i]}"
+    # does smth idk bro this is black magic for me
+    # though the actual explanation is, it loops through the right column output array, and prints each line at the correct position on the terminal, 
+    # using the RIGHT_COLUMN variable to set the starting position of the right column
+    for (( line_index = 0; line_index < ${#right_lines[@]}; line_index++ )); do
+        line_current="${right_lines[line_index]}"
 
-        printf '%s%s' "${ESC}[$((i + 1));${RIGHT_COLUMN}H" "$r"
+        printf '%s%s' "${ESC}[$((line_index + 1));${RIGHT_COLUMN}H" "$line_current"
     done
 
     # O arquivo da esquerda pode conter sequências internas do protocolo
@@ -143,25 +150,21 @@ render_wide() {
 }
 
 render_narrow() {
-    local logofile="$tmpdir/logo.raw" modulesfile="$tmpdir/modules.raw"
+    local local modulesfile="$tmpdir/modules.raw"
 
     # roda logo e módulos em paralelo também, mesmo que o resultado final
     # seja empilhado — reduz o tempo total no pior caso pela metade
-    run_fastfetch "$LOGO_ONLY_CONFIG" "$logofile" &
-    local pid_logo=$!
     run_fastfetch "$NARROW_MODULES_CONFIG" "$modulesfile" &
     local pid_modules=$!
-    wait "$pid_logo"
     wait "$pid_modules"
 
-    if [[ ! -s "$logofile" && ! -s "$modulesfile" ]]; then
+    if [[ ! -s "$modulesfile" ]]; then
         timeout "${FASTFETCH_TIMEOUT}s" fastfetch
         return
     fi
 
     printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
-    [[ -s "$logofile" ]] && cat "$logofile"
-    [[ -s "$modulesfile" ]] && cat "$modulesfile"
+    cat "$modulesfile"
 }
 
 main() {
