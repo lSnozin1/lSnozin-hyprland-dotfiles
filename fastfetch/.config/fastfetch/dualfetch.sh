@@ -133,41 +133,58 @@ render_wide() {
     # does smth idk bro this is black magic for me
     # though the actual explanation is, it loops through the right column output array, and prints each line at the correct position on the terminal, 
     # using the RIGHT_COLUMN variable to set the starting position of the right column
+    # in another another words, a for in C style
     for (( line_index = 0; line_index < ${#right_lines[@]}; line_index++ )); do
+        # gets the current line of the right column output
         line_current="${right_lines[line_index]}"
 
+        # sets the cursor position to the correct position, that sets the text printed there correctly
         printf '%s%s' "${ESC}[$((line_index + 1));${RIGHT_COLUMN}H" "$line_current"
     done
 
-    # O arquivo da esquerda pode conter sequências internas do protocolo
-    # Kitty, então não usamos wc -l para determinar sua altura visual.
+    # creates two variables needed here
     local right_height final_row
 
+    # sets right_height to the number of lines in the right column output array
     right_height=${#right_lines[@]}
+
+    # adds 2 to the right_height to account for the top and bottom borders of the terminal, sets it as final_row
     final_row=$((right_height + 2))
 
+    # moves the cursor to the final row, so the prompt will be printed there, and not on top of the right column output
     printf '%s' "${ESC}[${final_row};1H"
 }
 
+# this function is used when the terminal enters 'narrow' mode, when the terminal width is more than WIDE_THRESHOLD
 render_narrow() {
-    local local modulesfile="$tmpdir/modules.raw"
+    # defines the temp file for the narrow fastfetch output, will be cleaned up on exit
+    local narrow_fastfetch_output="$tmpdir/narrow_output.raw"
 
-    # roda logo e módulos em paralelo também, mesmo que o resultado final
-    # seja empilhado — reduz o tempo total no pior caso pela metade
-    run_fastfetch "$NARROW_MODULES_CONFIG" "$modulesfile" &
-    local pid_modules=$!
-    wait "$pid_modules"
+    # executes fastfetch with the narrow-modules.jsonc, and saves the exit on the temp file above
+    run_fastfetch "$NARROW_MODULES_CONFIG" "$narrow_fastfetch_output" &
+    
+    # saves the id of the above process
+    local narrow_fastfetch_pid=$!
 
-    if [[ ! -s "$modulesfile" ]]; then
+    # waits for it to finish
+    wait "$narrow_fastfetch_pid"
+
+    # fallback if the output is empty by a error or smth it will still execute the terminal, just without the normal fastfetch config.jsonc
+    if [[ ! -s "$narrow_fastfetch_output" ]]; then
         timeout "${FASTFETCH_TIMEOUT}s" fastfetch
         return
     fi
 
+    # same thing of before of H moves the cursor to the top left corner of the terminal, 2J clears the screen, 3J clears the scrollback buffer
     printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
-    cat "$modulesfile"
+
+    # prints the file content
+    cat "$narrow_fastfetch_output"
 }
 
+# main (duh)
 main() {
+    # does dsds
     if ! command -v fastfetch >/dev/null 2>&1; then
         echo "dualfetch.sh: fastfetch não encontrado no PATH" >&2
         exit 1
