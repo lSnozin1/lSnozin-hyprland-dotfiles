@@ -12,10 +12,14 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
 hl.bind(mainMod .. " + Q", 			hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
 hl.bind(mainMod .. " + escape", 	hl.dsp.exec_cmd("kitty fish --no-config"), { description = "Launch terminal backup" })
+
 hl.bind(mainMod .. " + E", 			hl.dsp.exec_cmd(MAIN_FILE_MANAGER), { description = "Launch main file manager" })
 hl.bind(mainMod .. " + SHIFT + E", 	hl.dsp.exec_cmd(SECONDARY_FILE_MANAGER), { description = "Launch secondary file manager" })
+
 hl.bind(mainMod .. " + R", 			hl.dsp.exec_cmd(MENU), { description = "Launch menu" })
 
+hl.bind(mainMod .. " + B",			hl.dsp.exec_cmd(MAIN_RESOURCE_MANAGER), { description = "Launch Main Resource Manager"})
+hl.bind(mainMod .. " + SHIFT + B",	hl.dsp.exec_cmd(TERMINAL .. " --single-instance " .. SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
 -----------------
 ---- WINDOWS ----
 -----------------
