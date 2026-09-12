@@ -125,7 +125,7 @@ local moveDeltaruneRule = hl.window_rule({
 	size = "1280 960",
 	center = true,
 	move = {100, 100},
-	suppress_event = "x11configurerequest",
+	suppress_event = "x11configurerequest fullscreen maximize",
 })
 
 -- window rule for Workspace 10 (discord)
