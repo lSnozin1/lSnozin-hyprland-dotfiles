@@ -116,6 +116,12 @@ local moveSoberRule = hl.window_rule({
 	workspace = WS.GAMES,
 })
 
+local moveDeltaruneRule = hl.window_rule({
+	name = "save-deltarune",
+	match = {class = "steam_app_1690940" },
+	workspace = WS.GAMES,
+})
+
 -- window rule for Workspace 10 (discord)
 local moveDiscordRule = hl.window_rule({
 	name = "set-discord-workspace",
