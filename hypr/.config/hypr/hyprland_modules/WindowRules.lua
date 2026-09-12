@@ -109,12 +109,22 @@ local moveVSCodeRule = hl.window_rule({
 	workspace = WS.CODE,
 })
 
--- window rule for Workspace 3 (Games)
+-- window rules for Workspace 3 (Games)
+--#region workspace-3
+
 local moveSoberRule = hl.window_rule({
 	name = "set-sober-workspace",
 	match = { class = "org.vinegarhq.Sober" },
 	workspace = WS.GAMES,
 })
+
+local moveSoberRule = hl.window_rule({
+	name = "set-WatchDogs-workspace",
+	match = { class = "steam_app_447040" },
+	workspace = WS.GAMES,
+})
+
+--#endregion
 
 -- window rule for Workspace 6 (Launchers)
 local moveSteamRule = hl.window_rule({
