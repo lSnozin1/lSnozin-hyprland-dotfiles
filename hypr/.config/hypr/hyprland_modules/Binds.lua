@@ -56,14 +56,14 @@ hl.bind(mainMod .. " + J", 				hl.dsp.layout("togglesplit"), { description = "To
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
 for i = 1, 10 do
 	local key = i % 10 -- 10 maps to key 0
-	hl.bind(mainMod .. " + " .. key, 		   	hl.dsp.focus({ workspace = i }), { description = "Switch to workspace " .. i })
-	hl.bind(mainMod .. " + SHIFT + " .. key,	hl.dsp.window.move({ workspace = i }), { description = "Move window to workspace " .. i })
+	hl.bind(mainMod .. " + " .. key, 		   		hl.dsp.focus({ workspace = i }), { description = "Switch to workspace " .. i })
+	hl.bind(mainMod .. " + SHIFT + " .. key,		hl.dsp.window.move({ workspace = i }), { description = "Move window to workspace " .. i })
 end
 
 
 -- Special Workspaces (scratchpads)
-hl.bind(mainMod .. " + S", 						hl.dsp.workspace.toggle_special("magic"), { description = "Toggle special workspace 'magic'" })
-hl.bind(mainMod .. " + SHIFT + S", 				hl.dsp.window.move({ workspace = "special:magic" }), { description = "Move window to special workspace 'magic'" })
+hl.bind(mainMod .. " + S", 							hl.dsp.workspace.toggle_special("magic"), { description = "Toggle special workspace 'magic'" })
+hl.bind(mainMod .. " + SHIFT + S", 					hl.dsp.window.move({ workspace = "special:magic" }), { description = "Move window to special workspace 'magic'" })
 
 hl.bind(mainMod .. " + HOME", 						hl.dsp.workspace.toggle_special("headless_kitty"), { description = "Toggle special workspace 'headless-kitty'" })
 hl.bind(mainMod .. " + SHIFT + HOME", 				hl.dsp.window.move({ workspace = "special:headless_kitty" }), { description = "Move window to special workspace 'headless-kitty'" })
@@ -72,10 +72,10 @@ hl.bind(mainMod .. " + SHIFT + HOME", 				hl.dsp.window.move({ workspace = "spec
 ---- UTILITIES ----
 -------------------
 
-hl.bind(mainMod .. " + Print", 			hl.dsp.exec_cmd("hyprshot -m region --freeze --clipboard-only"), { description = "Take screenshot" })
-hl.bind(maindMod .. " + CTRL_L + Print")
-hl.bind(mainMod .. " + SHIFT + Print", 		hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot" })
-hl.bind(mainMod .. " + V", 					hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "Paste from clipboard history" })
+hl.bind(mainMod .. " + Print", 					hl.dsp.exec_cmd("hyprshot -m region --freeze --clipboard-only"), { description = "Take screenshot" })
+hl.bind(mainMod .. " + CTRL + Print", 			hl.dsp.exec_cmd("hyprshot -m region --freeze "), { description = "Take screenshot" })
+hl.bind(mainMod .. " + SHIFT + Print", 			hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot" })
+hl.bind(mainMod .. " + V", 						hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "Paste from clipboard history" })
 
 -- Midia keybinds - Requires playerctl
 hl.bind("XF86AudioNext", 				hl.dsp.exec_cmd("playerctl next"), { locked = true, description = "Next track" })
