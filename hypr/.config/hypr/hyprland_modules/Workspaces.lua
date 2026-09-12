@@ -18,12 +18,13 @@ for i = 8, 10 do
     hl.workspace_rule(rule)
 end
 
--- Set names for workspaces for what they are *normally* used for, not set rules
+-- Set names for workspaces for what they are *normally* used for, mostly for window rules on some apps startup, not set rules
 local WS = {
     WEB = "1",
     CODE = "2",
     GAMES = "3",
     WEB_KITTY = "4",
+    LAUNCHERS = "6",
     DISCORD = "10",
 }
 
