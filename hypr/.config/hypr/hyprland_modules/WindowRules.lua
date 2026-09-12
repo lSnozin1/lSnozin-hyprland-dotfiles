@@ -111,9 +111,16 @@ local moveVSCodeRule = hl.window_rule({
 
 -- window rule for Workspace 3 (Games)
 local moveSoberRule = hl.window_rule({
-	name = "set-games-workspace",
+	name = "set-sober-workspace",
 	match = { class = "org.vinegarhq.Sober" },
 	workspace = WS.GAMES,
+})
+
+-- window rule for Workspace 6 (Launchers)
+local moveSteamRule = hl.window_rule({
+	name = "set-steam-workspace",
+	match = { class = "steam"},
+	workspace = WS.LAUNCHERS,
 })
 
 -- fixes deltarune window going off monitor, while also setting it to worspace Games
