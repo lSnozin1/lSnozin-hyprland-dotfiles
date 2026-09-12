@@ -127,6 +127,9 @@ local moveDiscordRule = hl.window_rule({
 	name = "set-discord-workspace",
 	match = { class = "discord" },
 	workspace = WS.DISCORD,
+	float = true,
+	size = "1280 960",
+	center = true,
 })
 
 --#endregion
