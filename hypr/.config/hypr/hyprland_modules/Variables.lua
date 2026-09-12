@@ -74,7 +74,7 @@ hl.config({
 		close_special_on_empty = true,			-- close the special workspace if the last window is removed
 		on_focus_under_fullscreen = 0,			-- if there is a fullscreen or maximized window, decide whether a tiled window requested to focus should replace it, stay behind or disable the fullscreen/maximized state. 0 - ignore focus request (keep focus on fullscreen window), 1 - takes over, 2 - unfullscreen/unmaximize [0/1/2]
 		exit_window_retains_fullscreen = false,	-- whether closing a fullscreen window makes the next focused window to be fullscreened. 0 - disabled, 1 - enabled, 2 - only when closing a grouped window, 3 - only when closing a non-grouped window [0/1/2/3]
-		initial_workspace_tracking = 0,			-- if enabled, windows will open on the workspace they were invoked on. 0 - disabled, 1 - single-shot, 2 - persistent (all children too)
+		initial_workspace_tracking = 1,			-- if enabled, windows will open on the workspace they were invoked on. 0 - disabled, 1 - single-shot, 2 - persistent (all children too)
 		middle_click_paste = true,				-- whether to enable middle-click-paste (aka primary selection)
 		render_unfocused_fps = 1,				-- the maximum limit for render_unfocused windows’ fps in the background (see also Window-Rules - render_unfocused)
 		disable_xdg_env_checks = true,			-- disable the warning if XDG environment is externally managed
