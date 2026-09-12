@@ -121,8 +121,9 @@ local moveDeltaruneRule = hl.window_rule({
 	match = { class = "steam_app_1690940" },
 	workspace = WS.GAMES,
 	float = true,
-	size = "1280 960",
+	size = "1280, 960",
 	center = true,
+	move = {100, 100},
 })
 
 -- window rule for Workspace 10 (discord)
