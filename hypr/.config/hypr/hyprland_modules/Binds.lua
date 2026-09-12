@@ -72,9 +72,9 @@ hl.bind(mainMod .. " + SHIFT + HOME", 				hl.dsp.window.move({ workspace = "spec
 ---- UTILITIES ----
 -------------------
 
-hl.bind(mainMod .. " + Print", 					hl.dsp.exec_cmd("hyprshot -m region --freeze --clipboard-only"), { description = "Take screenshot" })
-hl.bind(mainMod .. " + CTRL + Print", 			hl.dsp.exec_cmd("hyprshot -m region --freeze "), { description = "Take screenshot" })
-hl.bind(mainMod .. " + SHIFT + Print", 			hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot" })
+hl.bind(mainMod .. " + Print", 					hl.dsp.exec_cmd("hyprshot -m region --freeze --clipboard-only"), { description = "Take screenshot with selection" })
+hl.bind(mainMod .. " + CTRL + Print", 			hl.dsp.exec_cmd("hyprshot -m output -m active"), { description = "Instant Take screenshot" })
+hl.bind(mainMod .. " + SHIFT + Print", 			hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot with selection and edition" })
 hl.bind(mainMod .. " + V", 						hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "Paste from clipboard history" })
 
 -- Midia keybinds - Requires playerctl
