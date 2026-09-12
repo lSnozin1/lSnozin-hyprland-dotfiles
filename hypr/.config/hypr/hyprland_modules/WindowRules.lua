@@ -121,14 +121,11 @@ local moveDeltaruneRule = hl.window_rule({
 	match = { class = "steam_app_1690940" },
 	workspace = WS.GAMES,
 	float = true,
-	size = "1280, 960",
+	size = "1280 960",
 	center = true,
 	move = {100, 100},
+	suppress_event = "x11configurerequest",
 })
-
-hl.exec_cmd("hyprctl keyword windowrulev2 'float,class:^(steam_app_1690940)$'")
-hl.exec_cmd("hyprctl keyword windowrulev2 'size 1280 960,class:^(steam_app_1690940)$'")
-hl.exec_cmd("hyprctl keyword windowrulev2 'center,class:^(steam_app_1690940)$'")
 
 -- window rule for Workspace 10 (discord)
 local moveDiscordRule = hl.window_rule({
