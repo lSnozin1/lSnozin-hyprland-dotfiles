@@ -116,6 +116,7 @@ local moveSoberRule = hl.window_rule({
 	workspace = WS.GAMES,
 })
 
+-- fixes deltarune window going off monitor, while also setting it to worspace Games
 local moveDeltaruneRule = hl.window_rule({
 	name = "fix-deltarune-position",
 	match = { class = "steam_app_1690940" },
