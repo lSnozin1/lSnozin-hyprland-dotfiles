@@ -120,6 +120,9 @@ local moveDeltaruneRule = hl.window_rule({
 	name = "save-deltarune",
 	match = {class = "steam_app_1690940" },
 	workspace = WS.GAMES,
+	float = true,
+	size = "1280 960",
+	center = true,
 })
 
 -- window rule for Workspace 10 (discord)
@@ -127,9 +130,6 @@ local moveDiscordRule = hl.window_rule({
 	name = "set-discord-workspace",
 	match = { class = "discord" },
 	workspace = WS.DISCORD,
-	float = true,
-	size = "1280 960",
-	center = true,
 })
 
 --#endregion
