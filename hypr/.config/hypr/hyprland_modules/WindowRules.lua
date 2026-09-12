@@ -14,7 +14,7 @@ local suppressMaximizeRule = hl.window_rule({
 	-- Ignore maximize requests from all apps. You'll probably like this.
 	name = "suppress-maximize-events",
 	match = { class = ".*" },
-	
+
 	suppress_event = "maximize",
 })
 -- suppressMaximizeRule:set_enabled(false)
@@ -103,21 +103,21 @@ hl.on("window.title", checkAndMove)
 
 
 -- window rule for Workspace 2 (Code)
-hl.window_rule({
+local moveVSCodeRule = hl.window_rule({
 	name = "set-vscode-workspace",
 	match = { class = "code" },
 	workspace = WS.CODE,
 })
 
 -- window rule for Workspace 3 (Games)
-hl.window_rule({
+local moveSoberRule = hl.window_rule({
 	name = "set-games-workspace",
 	match = { class = "org.vinegarhq.Sober" },
 	workspace = WS.GAMES,
 })
 
 -- window rule for Workspace 10 (discord)
-hl.window_rule({
+local moveDiscordRule = hl.window_rule({
 	name = "set-discord-workspace",
 	match = { class = "discord" },
 	workspace = WS.DISCORD,
