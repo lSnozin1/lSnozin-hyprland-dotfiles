@@ -117,8 +117,8 @@ local moveSoberRule = hl.window_rule({
 })
 
 local moveDeltaruneRule = hl.window_rule({
-	name = "save-deltarune",
-	match = {class = "steam_app_1690940" },
+	name = "fix-deltarune-position",
+	match = { class = "steam_app_1690940" },
 	workspace = WS.GAMES,
 	float = true,
 	size = "1280 960",
