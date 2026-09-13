@@ -66,7 +66,7 @@ hl.bind(mainMod .. " + S", 							hl.dsp.workspace.toggle_special("magic"), { de
 hl.bind(mainMod .. " + SHIFT + S", 					hl.dsp.window.move({ workspace = "special:magic" }), { description = "Move window to special workspace 'magic'" })
 
 -- hl.bind(mainMod .. " + HOME", 						hl.dsp.workspace.toggle_special("headless_kitty"), { description = "Toggle special workspace 'headless-kitty'" })
---hl.bind(mainMod .. " + SHIFT + HOME", 				hl.dsp.window.move({ workspace = "special:headless_kitty" }), { description = "Move window to special workspace 'headless-kitty'" })
+-- hl.bind(mainMod .. " + SHIFT + HOME", 				hl.dsp.window.move({ workspace = "special:headless_kitty" }), { description = "Move window to special workspace 'headless-kitty'" })
 
 -------------------
 ---- UTILITIES ----
