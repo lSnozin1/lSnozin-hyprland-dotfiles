@@ -10,16 +10,16 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 ---- LAUNCHER ----
 ------------------
 
-hl.bind(mainMod .. " + Q", 			hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
-hl.bind(mainMod .. " + escape", 	hl.dsp.exec_cmd("kitty fish --no-config"), { description = "Launch terminal backup" })
+hl.bind(mainMod .. " + Q", 				hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
+hl.bind(mainMod .. " + escape", 		hl.dsp.exec_cmd("kitty fish --no-config"), { description = "Launch terminal backup" })
 
-hl.bind(mainMod .. " + E", 			hl.dsp.exec_cmd(MAIN_FILE_MANAGER), { description = "Launch main file manager" })
-hl.bind(mainMod .. " + SHIFT + E", 	hl.dsp.exec_cmd(SECONDARY_FILE_MANAGER), { description = "Launch secondary file manager" })
+hl.bind(mainMod .. " + E", 				hl.dsp.exec_cmd(MAIN_FILE_MANAGER), { description = "Launch main file manager" })
+hl.bind(mainMod .. " + SHIFT + E", 		hl.dsp.exec_cmd(SECONDARY_FILE_MANAGER), { description = "Launch secondary file manager" })
 
-hl.bind(mainMod .. " + R", 			hl.dsp.exec_cmd(MENU), { description = "Launch menu" })
+hl.bind(mainMod .. " + R", 				hl.dsp.exec_cmd(MENU), { description = "Launch menu" })
 
-hl.bind(mainMod .. " + B",			hl.dsp.exec_cmd(MAIN_RESOURCE_MANAGER), { description = "Launch Main Resource Manager"})
-hl.bind(mainMod .. " + SHIFT + B",	hl.dsp.exec_cmd(TERMINAL .. " --single-instance " .. SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
+hl.bind(mainMod .. " + B",				hl.dsp.exec_cmd(MAIN_RESOURCE_MANAGER), { description = "Launch Main Resource Manager"})
+hl.bind(mainMod .. " + SHIFT + B",		hl.dsp.exec_cmd(TERMINAL .. " --single-instance " .. SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
 -----------------
 ---- WINDOWS ----
 -----------------
@@ -62,8 +62,8 @@ end
 
 
 -- Special Workspaces (scratchpads)
-hl.bind(mainMod .. " + S", 							hl.dsp.workspace.toggle_special("magic"), { description = "Toggle special workspace 'magic'" })
-hl.bind(mainMod .. " + SHIFT + S", 					hl.dsp.window.move({ workspace = "special:magic" }), { description = "Move window to special workspace 'magic'" })
+hl.bind(mainMod .. " + S", 					hl.dsp.workspace.toggle_special("magic"), { description = "Toggle special workspace 'magic'" })
+hl.bind(mainMod .. " + SHIFT + S", 			hl.dsp.window.move({ workspace = "special:magic" }), { description = "Move window to special workspace 'magic'" })
 
 -- hl.bind(mainMod .. " + HOME", 						hl.dsp.workspace.toggle_special("headless_kitty"), { description = "Toggle special workspace 'headless-kitty'" })
 -- hl.bind(mainMod .. " + SHIFT + HOME", 				hl.dsp.window.move({ workspace = "special:headless_kitty" }), { description = "Move window to special workspace 'headless-kitty'" })
@@ -72,24 +72,24 @@ hl.bind(mainMod .. " + SHIFT + S", 					hl.dsp.window.move({ workspace = "specia
 ---- UTILITIES ----
 -------------------
 
-hl.bind(mainMod .. " + Print", 					hl.dsp.exec_cmd("hyprshot -m region --freeze --clipboard-only"), { description = "Take screenshot with selection" })
-hl.bind(mainMod .. " + CTRL + Print", 			hl.dsp.exec_cmd("hyprshot -m output -m active"), { description = "Instant Take screenshot" })
-hl.bind(mainMod .. " + SHIFT + Print", 			hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot with selection and edition" })
-hl.bind(mainMod .. " + V", 						hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "Paste from clipboard history" })
+hl.bind(mainMod .. " + Print", 				hl.dsp.exec_cmd("hyprshot -m region --freeze --clipboard-only"), { description = "Take screenshot with selection" })
+hl.bind(mainMod .. " + CTRL + Print", 		hl.dsp.exec_cmd("hyprshot -m output -m active"), { description = "Instant Take screenshot" })
+hl.bind(mainMod .. " + SHIFT + Print", 		hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot with selection and edition" })
+hl.bind(mainMod .. " + V", 					hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "Paste from clipboard history" })
 
 -- Midia keybinds - Requires playerctl
-hl.bind("XF86AudioNext", 				hl.dsp.exec_cmd("playerctl next"), { locked = true, description = "Next track" })
-hl.bind("XF86AudioPause", 				hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/Pause" })
-hl.bind("XF86AudioPlay", 				hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/Pause" })
-hl.bind("XF86AudioPrev", 				hl.dsp.exec_cmd("playerctl previous"), { locked = true, description = "Previous track" })
+hl.bind("XF86AudioNext", 					hl.dsp.exec_cmd("playerctl next"), { locked = true, description = "Next track" })
+hl.bind("XF86AudioPause", 					hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/Pause" })
+hl.bind("XF86AudioPlay", 					hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/Pause" })
+hl.bind("XF86AudioPrev", 					hl.dsp.exec_cmd("playerctl previous"), { locked = true, description = "Previous track" })
 
 -- Midia keybinds - extras that uses keypad keys
-hl.bind(mainMod .. " + KP_Up", 			hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, description = "Increase volume" })
-hl.bind(mainMod .. " + KP_Down", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, description = "Decrease volume" })
-hl.bind(mainMod .. " + KP_Begin", 		hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true, description = "Toggle mute" })
-hl.bind(mainMod .. " + KP_Insert", 		hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, description = "Toggle mic mute" })
-hl.bind(mainMod .. " + KP_Add",      	hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%+"), { locked = true, description = "Increase mic volume" })
-hl.bind(mainMod .. " + KP_Subtract", 	hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-"), { locked = true, description = "Decrease mic volume" })
+hl.bind(mainMod .. " + KP_Up", 				hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, description = "Increase volume" })
+hl.bind(mainMod .. " + KP_Down", 			hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, description = "Decrease volume" })
+hl.bind(mainMod .. " + KP_Begin", 			hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true, description = "Toggle mute" })
+hl.bind(mainMod .. " + KP_Insert", 			hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, description = "Toggle mic mute" })
+hl.bind(mainMod .. " + KP_Add",      		hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%+"), { locked = true, description = "Increase mic volume" })
+hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-"), { locked = true, description = "Decrease mic volume" })
 
 
 -- Closes Hyprland // executes hyprshutdown if available, otherwise it will just exit the session
