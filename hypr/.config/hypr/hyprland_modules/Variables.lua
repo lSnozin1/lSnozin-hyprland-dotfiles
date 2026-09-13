@@ -56,7 +56,7 @@ hl.config({
 	misc = {
 		disable_hyprland_logo = false, 			-- If true disables the random hyprland logo / anime girl background. :(
 		disable_scale_notification = false,		-- disables notification popup when a monitor fails to set a suitable scale
-		force_default_wallpaper = 1, 			-- Set to 0 or 1 to disable the anime mascot wallpapers
+		force_default_wallpaper = 0, 			-- Set to 0 or 1 to disable the anime mascot wallpapers
 		vrr = 1,								-- controls the VRR (Adaptive Sync) of your monitors. 0 - off, 1 - on, 2 - fullscreen only, 3 - fullscreen with video or game content type [0/1/2/3]
 		mouse_move_enables_dpms = false,		-- If DPMS is set to off, wake up the monitors if the mouse moves.
 		key_press_enables_dpms = false,			-- If DPMS is set to off, wake up the monitors if a key is pressed.
