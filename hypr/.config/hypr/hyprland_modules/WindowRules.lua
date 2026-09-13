@@ -157,8 +157,7 @@ local moveDiscordRule = hl.window_rule({
 --#region CustomInvisibleWindowRules
 -- window rules that does invisible things
 
--- window rule for headless kitty to be put on it's own special workspace
-
+--currently empty
 
 
 --#endregion
