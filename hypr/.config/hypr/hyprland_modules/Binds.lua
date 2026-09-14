@@ -99,8 +99,11 @@ hl.bind(mainMod .. " + M",				hl.dsp.exec_cmd("command -v hyprshutdown >/dev/nul
 ---- SUBMAPS ----
 -----------------
 
+hl.bind(mainMod .. " + HOME", hl.dsp.submap("Launchers"))
 
-
+hl.define_submap("Launchers", function ()
+	
+end)
 
 
 --------------------------------
