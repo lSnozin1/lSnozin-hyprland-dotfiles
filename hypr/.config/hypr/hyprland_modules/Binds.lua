@@ -114,6 +114,7 @@ hl.define_submap("Launchers", function ()
 	hl.bind(mainMod .. " + B",				hl.dsp.exec_cmd(MAIN_RESOURCE_MANAGER), { description = "Launch Main Resource Manager"})
 	hl.bind(mainMod .. " + SHIFT + B",		hl.dsp.exec_cmd(TERMINAL .. " --single-instance " .. SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
 
+	hl.bind("catchall", hl.dsp.submap("reset"))
 end)
 
 
