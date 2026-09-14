@@ -95,9 +95,17 @@ hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAUL
 -- Closes Hyprland // executes hyprshutdown if available, otherwise it will just exit the session
 hl.bind(mainMod .. " + M",				hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Exit Hyprland" })
 
+-----------------
+---- SUBMAPS ----
+-----------------
+
+
+
+
+
 --------------------------------
 ---- Custom Global Keybinds ----
 --------------------------------
----
+
 local DiscMute = "Scroll_Lock"
 hl.bind(DiscMute, 						hl.dsp.pass({ window = "class:^(discord)$" }), { description = "Mutes Mic on discord" })
