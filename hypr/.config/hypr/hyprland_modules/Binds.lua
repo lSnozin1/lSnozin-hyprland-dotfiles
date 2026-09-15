@@ -10,8 +10,8 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 ---- LAUNCHER ----
 ------------------
 
-hl.bind(mainMod .. " + Q", 				hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
-hl.bind(mainMod .. " + SHIFT + Q", 				hl.dsp.workspace.toggle_special("kitty"), { description = "Toggle special workspace that has permanent kitty" })
+hl.bind(mainMod .. " + SHIFT + Q", 		hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
+hl.bind(mainMod .. " + Q", 				hl.dsp.workspace.toggle_special("kitty"), { description = "Toggle special workspace that has permanent kitty" })
 hl.bind(mainMod .. " + escape", 		hl.dsp.exec_cmd("kitty fish --no-config"), { description = "Launch terminal backup" })
 
 hl.bind(mainMod .. " + E", 				hl.dsp.exec_cmd(MAIN_FILE_MANAGER), { description = "Launch main file manager" })
@@ -63,11 +63,11 @@ end
 
 
 -- Special Workspaces (scratchpads)
-hl.bind(mainMod .. " + S", 					hl.dsp.workspace.toggle_special("magic"), { description = "Toggle special workspace 'magic'" })
-hl.bind(mainMod .. " + SHIFT + S", 			hl.dsp.window.move({ workspace = "special:magic" }), { description = "Move window to special workspace 'magic'" })
+hl.bind(mainMod .. " + S", 							hl.dsp.workspace.toggle_special("magic"), { description = "Toggle special workspace 'magic'" })
+hl.bind(mainMod .. " + SHIFT + S", 					hl.dsp.window.move({ workspace = "special:magic" }), { description = "Move window to special workspace 'magic'" })
 
--- hl.bind(mainMod .. " + HOME", 						hl.dsp.workspace.toggle_special("headless_kitty"), { description = "Toggle special workspace 'headless-kitty'" })
--- hl.bind(mainMod .. " + SHIFT + HOME", 				hl.dsp.window.move({ workspace = "special:headless_kitty" }), { description = "Move window to special workspace 'headless-kitty'" })
+-- hl.bind(mainMod .. " + HOME", 					hl.dsp.workspace.toggle_special("headless_kitty"), { description = "Toggle special workspace 'headless-kitty'" })
+-- hl.bind(mainMod .. " + SHIFT + HOME", 			hl.dsp.window.move({ workspace = "special:headless_kitty" }), { description = "Move window to special workspace 'headless-kitty'" })
 
 -------------------
 ---- UTILITIES ----
