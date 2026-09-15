@@ -99,21 +99,11 @@ hl.bind(mainMod .. " + M",				hl.dsp.exec_cmd("command -v hyprshutdown >/dev/nul
 ---- SUBMAPS ----
 -----------------
 
-hl.bind(mainMod .. " + HOME", hl.dsp.submap("Launchers"))
+hl.bind(mainMod .. " + HOME", hl.dsp.submap("Special_Workspaces"))
 
-hl.define_submap("Launchers", function()
+hl.define_submap("Special_Workspaces", function()
+
 	
-	hl.bind(mainMod .. " + Q", 				hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
-	hl.bind(mainMod .. " + escape", 		hl.dsp.exec_cmd("kitty fish --no-config"), { description = "Launch terminal backup" })
-
-	hl.bind(mainMod .. " + E", 				hl.dsp.exec_cmd(MAIN_FILE_MANAGER), { description = "Launch main file manager" })
-	hl.bind(mainMod .. " + SHIFT + E", 		hl.dsp.exec_cmd(SECONDARY_FILE_MANAGER), { description = "Launch secondary file manager" })
-
-	hl.bind(mainMod .. " + R", 				hl.dsp.exec_cmd(MENU), { description = "Launch menu" })
-
-	hl.bind(mainMod .. " + B",				hl.dsp.exec_cmd(MAIN_RESOURCE_MANAGER), { description = "Launch Main Resource Manager"})
-	hl.bind(mainMod .. " + SHIFT + B",		hl.dsp.exec_cmd(TERMINAL .. " --single-instance " .. SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
-
 	hl.bind("escape", hl.dsp.submap("reset"))
 end)
 
