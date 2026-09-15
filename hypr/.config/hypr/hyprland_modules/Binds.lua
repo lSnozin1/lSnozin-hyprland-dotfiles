@@ -48,9 +48,9 @@ hl.bind(mainMod .. " + mouse:273", 		hl.dsp.window.resize(), { mouse = true }, {
 -- dwindle only
 hl.bind(mainMod .. " + J", 				hl.dsp.layout("togglesplit"), { description = "Toggle split" })
 
---------------------
----- WORKSPACES ----
---------------------
+---------------------------
+---- GLOBAL WORKSPACES ----
+---------------------------
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
@@ -101,10 +101,12 @@ hl.bind(mainMod .. " + M",				hl.dsp.exec_cmd("command -v hyprshutdown >/dev/nul
 
 hl.bind(mainMod .. " + HOME", hl.dsp.submap("Special_Workspaces"))
 
-hl.define_submap("Special_Workspaces", function()
+hl.define_submap("Special_Workspaces", "reset", function()
 
-	
-	hl.bind("escape", hl.dsp.submap("reset"))
+	hl.bind(mainMod .. " + Q", 				hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
+
+
+	hl.bind("escape", hl.dsp.submap("reset"))  -- backuo button to leave submap
 end)
 
 
