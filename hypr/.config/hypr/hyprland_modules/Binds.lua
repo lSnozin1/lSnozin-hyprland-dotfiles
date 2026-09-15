@@ -11,6 +11,7 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 ------------------
 
 hl.bind(mainMod .. " + Q", 				hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
+hl.bind(mainMod .. " + SHIFT + Q", 				hl.dsp.workspace.toggle_special("kitty"), { description = "Toggle special workspace that has permanent kitty" })
 hl.bind(mainMod .. " + escape", 		hl.dsp.exec_cmd("kitty fish --no-config"), { description = "Launch terminal backup" })
 
 hl.bind(mainMod .. " + E", 				hl.dsp.exec_cmd(MAIN_FILE_MANAGER), { description = "Launch main file manager" })
