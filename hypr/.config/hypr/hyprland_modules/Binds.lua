@@ -99,17 +99,17 @@ hl.bind(mainMod .. " + M",				hl.dsp.exec_cmd("command -v hyprshutdown >/dev/nul
 ---- SUBMAPS ----
 -----------------
 
-hl.bind(mainMod .. " + HOME", hl.dsp.submap("Special_Workspaces"))
+-- hl.bind(mainMod .. " + HOME", hl.dsp.submap("Special_Workspaces"))
 
-hl.define_submap("Special_Workspaces", "reset", function()
+-- hl.define_submap("Special_Workspaces", "reset", function()
 
 	-- hl.bind(mainMod .. " + Q", 				hl.dsp.exec_cmd(TERMINAL .. " --single-instance"), { description = "Launch terminal" })
 
-	hl.bind(mainMod .. " + Q", 				hl.dsp.workspace.toggle_special("kitty"), { description = "Toggle special workspace that has permanent kitty" })
+	-- hl.bind(mainMod .. " + Q", 				hl.dsp.workspace.toggle_special("kitty"), { description = "Toggle special workspace that has permanent kitty" })
 
 
-	hl.bind("escape", hl.dsp.submap("reset"))  -- backuo button to leave submap
-end)
+	-- hl.bind("escape", hl.dsp.submap("reset"))  -- backuo button to leave submap
+-- end)
 
 
 --------------------------------
