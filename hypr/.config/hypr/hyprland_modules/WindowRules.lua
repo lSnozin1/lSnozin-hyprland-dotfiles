@@ -178,4 +178,11 @@ local movePermanentBtop = hl.window_rule({
 	workspace = "special:btop"
 })
 
+local moveTemporaryResources = hl.window_rule({
+	name = "set-Resources-SpecialWorkspace",
+	match = { class = "net.nokyan.Resources" },
+	workspace = "special:resources"
+})
+
+
 --#endregion

@@ -4,6 +4,8 @@
 
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 
+-- binds or whatever that are commented are alternate options for a bind that i don't prefer, don't use anymore, or idk
+
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
 ------------------
@@ -18,16 +20,21 @@ hl.bind(mainMod .. " + SHIFT + E", 		hl.dsp.exec_cmd(SECONDARY_FILE_MANAGER), { 
 
 hl.bind(mainMod .. " + R", 				hl.dsp.exec_cmd(MENU), { description = "Launch menu" })
 
-hl.bind(mainMod .. " + B",				hl.dsp.exec_cmd(MAIN_RESOURCE_MANAGER), { description = "Launch Main Resource Manager"})
-hl.bind(mainMod .. " + SHIFT + B",			hl.dsp.exec_cmd(SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
+hl.bind(mainMod .. " + B", 				hl.dsp.exec_cmd("pgrep -x " .. MAIN_RESOURCE_MANAGER .. " > /dev/null && pkill -x " .. MAIN_RESOURCE_MANAGER .. " || " .. MAIN_RESOURCE_MANAGER), { description = "Toggle Main Resource Manager" })
+
+
+--	hl.bind(mainMod .. " + SHIFT + B",		hl.dsp.exec_cmd(SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
 --  hl.bind(mainMod .. " + SHIFT + B",		hl.dsp.exec_cmd("alacritty -e " .. SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
 -----------------
----- WINDOWS ----
+---- WINDOWS ----1
 -----------------
 
 -- Window manipulation
 hl.bind(mainMod .. " + C", 				hl.dsp.window.close(), { description = "Close window" })
-hl.bind(mainMod .. " + SHIFT +C",   	hl.dsp.exec_cmd("hyprctl kill"), { description = "Kill window" })
+hl.bind(mainMod .. " + SHIFT + C",		hl.dsp.window.kill(), { description = "Force kill window" })
+
+--hl.bind(mainMod .. " + SHIFT +C",   	hl.dsp.exec_cmd("hyprctl kill"), { description = "Kill window" })
+
 hl.bind(mainMod .. " + P", 				hl.dsp.window.pseudo(), { description = "Toggle pseudo" })
 hl.bind(mainMod .. " + L", 				hl.dsp.window.float({ action = "toggle" }), { description = "Toggle float" })
 hl.bind(mainMod .. " + F", 				hl.dsp.window.fullscreen(), { description = "Toggle fullscreen" })
@@ -70,7 +77,7 @@ hl.bind(mainMod .. " + SHIFT + S", 					hl.dsp.window.move({ workspace = "specia
 hl.bind(mainMod .. " + Q", 							hl.dsp.workspace.toggle_special("kitty"), { description = "Toggle special workspace that has permanent kitty" })
 
 -- 'btop' workspace
-hl.bind(mainMod .. " + CTRL + B",					hl.dsp.workspace.toggle_special("btop"), { description = "Toggle special workspace that has permanent btop"})
+hl.bind(mainMod .. " + SHIFT + B",					hl.dsp.workspace.toggle_special("btop"), { description = "Toggle special workspace that has permanent btop"})
 
 -- hl.bind(mainMod .. " + HOME", 					hl.dsp.workspace.toggle_special("headless_kitty"), { description = "Toggle special workspace 'headless-kitty'" })
 -- hl.bind(mainMod .. " + SHIFT + HOME", 			hl.dsp.window.move({ workspace = "special:headless_kitty" }), { description = "Move window to special workspace 'headless-kitty'" })
