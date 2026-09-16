@@ -171,3 +171,11 @@ local movePermanentKitty = hl.window_rule({
 	match = { class = "kitty-permanent" },
 	workspace = "special:kitty"
 })
+
+local movePermanentBtop = hl.window_rule({
+	name = "set-btop-SpecialWorkspace",
+	match = { class = "btop-permanent" },
+	workspace = "special:btop"
+})
+
+--#endregion
