@@ -161,3 +161,13 @@ local moveDiscordRule = hl.window_rule({
 
 
 --#endregion
+
+
+--#region SpecialWorkspaces
+-- window rules for special workspaces
+
+local movePermanentKitty = hl.window_rule({
+	name = "set-kitty-SpecialWorkspace",
+	match = { class = "kitty-permanent" },
+	workspace = "special:kitty"
+})
