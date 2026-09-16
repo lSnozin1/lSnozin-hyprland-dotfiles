@@ -130,7 +130,7 @@ local moveSoberRule = hl.window_rule({
 local moveSteamRule = hl.window_rule({
 	name = "set-steam-workspace",
 	match = { class = "steam"},
-	workspace = WS.LAUNCHERS,
+	workspace = WS.LAUNCHERS .. " silent",
 })
 
 -- fixes deltarune window going off monitor, while also setting it to worspace Games
