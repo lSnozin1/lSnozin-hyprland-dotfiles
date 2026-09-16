@@ -21,10 +21,10 @@ hl.on("hyprland.start", function()
 	-- headless kitty (not that that important but helps with kitty performance and resource usage by a noticiable margin)
 	hl.exec_cmd("kitty --start-as=hidden --single-instance")
 
-	-- permanent kitty for special workspace 'kitty' (not rlly important)
+	-- permanent kitty for special workspace 'kitty' (not rlly important) 
 	hl.exec_cmd("kitty --class kitty-permanent --single-instance")
 
-	-- permanent btop for special workspace 'btop' (not rlly important)
+	-- permanent btop for special workspace 'btop' (not rlly important) (alacritty is used instead of kitty because btop looks nicer on it)
 	hl.exec_cmd("alacritty --class btop-permanent -e btop")
 
 	-- wallpaper (not that important)
