@@ -12,11 +12,17 @@
 --
 hl.on("hyprland.start", function()
 
-	--noctalia (only kinda slightly important (arguably more important than hyprland itself (not really but still)))
+	--noctalia (only kinda slightly important (arguably more important than hyprland itself (oky not really but still)))
 	hl.exec_cmd("noctalia >/dev/null 2>&1 &")
 
-	-- keyring (kinda important)
-	hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP & gnome-keyring-daemon --start --components=secrets")
+	-- Shares session info so background features like screen sharing and file pickers work properly
+	hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+
+	-- Starts the password vault so apps like VS Code or Git can store and unlock your saved logins
+	hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
+
+	-- Sets 'DP-1' (use monitor ID with hyprctl monitors to see) as your main monitor so older/XWayland games and apps open on your primary screen
+	hl.exec_cmd("xrandr --output DP-1 --primary")
 
 	-- headless kitty (not that that important but helps with kitty performance and resource usage by a noticiable margin)
 	hl.exec_cmd("kitty --start-as=hidden --single-instance")
