@@ -19,6 +19,7 @@ hl.bind(mainMod .. " + SHIFT + E", 		hl.dsp.exec_cmd(SECONDARY_FILE_MANAGER), { 
 hl.bind(mainMod .. " + R", 				hl.dsp.exec_cmd(MENU), { description = "Launch menu" })
 
 hl.bind(mainMod .. " + B",				hl.dsp.exec_cmd(MAIN_RESOURCE_MANAGER), { description = "Launch Main Resource Manager"})
+hl.bind(mainMod .. " + SHIFT + B",			hl.dsp.exec_cmd(SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
 --  hl.bind(mainMod .. " + SHIFT + B",		hl.dsp.exec_cmd("alacritty -e " .. SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
 -----------------
 ---- WINDOWS ----
@@ -69,7 +70,7 @@ hl.bind(mainMod .. " + SHIFT + S", 					hl.dsp.window.move({ workspace = "specia
 hl.bind(mainMod .. " + Q", 							hl.dsp.workspace.toggle_special("kitty"), { description = "Toggle special workspace that has permanent kitty" })
 
 -- 'btop' workspace
-hl.bind(mainMod .. " + SHIFT + B",					hl.dsp.workspace.toggle_special("btop"), { description = "Toggle special workspace that has permanent btop"})
+hl.bind(mainMod .. " + CTRL + B",					hl.dsp.workspace.toggle_special("btop"), { description = "Toggle special workspace that has permanent btop"})
 
 -- hl.bind(mainMod .. " + HOME", 					hl.dsp.workspace.toggle_special("headless_kitty"), { description = "Toggle special workspace 'headless-kitty'" })
 -- hl.bind(mainMod .. " + SHIFT + HOME", 			hl.dsp.window.move({ workspace = "special:headless_kitty" }), { description = "Move window to special workspace 'headless-kitty'" })
