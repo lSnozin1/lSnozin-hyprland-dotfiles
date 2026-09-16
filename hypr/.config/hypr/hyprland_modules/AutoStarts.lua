@@ -21,6 +21,8 @@ hl.on("hyprland.start", function()
 	-- headless kitty (not that that important but helps with kitty performance and resource usage by a noticiable margin)
 	hl.exec_cmd("kitty --start-as=hidden --single-instance")
 
+	-- permanent kitty for special workspace 'kitty'
+	hl.exec_cmd("kitty --class kitty-permanent --single-instance")
 	-- wallpaper (not that important)
 	hl.exec_cmd("sleep 5 && ~/Applications/waywallen-0.3.7-x86_64.AppImage --no-ui")
 	
