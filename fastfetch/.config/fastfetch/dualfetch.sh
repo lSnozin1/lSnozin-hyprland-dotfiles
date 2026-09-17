@@ -45,7 +45,7 @@ WIDE_THRESHOLD=180
 
 # counted as seconds, the ceiling for each fastfetch call to run, if a single one takes more than this, it gets killed, 
 # and the terminal opens without fastfetch instead of hanging
-FASTFETCH_TIMEOUT=4
+FASTFETCH_TIMEOUT=10
 
 # sets the esc button as a variable, so it can be used in the script without having to write the escape sequence every time
 ESC=$'\033'

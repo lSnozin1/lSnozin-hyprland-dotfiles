@@ -2,6 +2,7 @@ source /usr/share/cachyos-fish-config/cachyos-config.fish
 
 function fish_greeting
     if status is-interactive
+        sleep 0.1
         ~/.config/fastfetch/dualfetch.sh
         echo -e "Welcome ~home! (˶˃ ᵕ ˂˶) .ᐟ.ᐟ"
     end
@@ -24,6 +25,7 @@ end
 # só redesenha o fetch no resize se ainda estiver seguro
 function __dualfetch_resize --on-signal WINCH
     if test "$__dualfetch_safe" = 1
+        printf '\033[2J\033[H'
         ~/.config/fastfetch/dualfetch.sh
     end
 end
