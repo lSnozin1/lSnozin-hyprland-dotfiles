@@ -175,13 +175,15 @@ local movePermanentKitty = hl.window_rule({
 local movePermanentBtop = hl.window_rule({
 	name = "set-btop-SpecialWorkspace",
 	match = { class = "btop-permanent" },
-	workspace = "special:btop"
+	workspace = "special:btop",
+	no_initial_focus = true
 })
 
 local moveTemporaryResources = hl.window_rule({
 	name = "set-Resources-SpecialWorkspace",
 	match = { class = "net.nokyan.Resources" },
-	workspace = "special:resources"
+	workspace = "special:resources",
+	no_initial_focus = true
 })
 
 
