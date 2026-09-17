@@ -129,6 +129,8 @@ render_wide() {
     # transforms the right column output into an array
     mapfile -t right_lines < "$rightraw"
 
+    mapfile -t left_lines < "$leftraw"
+
     # H moves the cursor to the top left corner of the terminal, 2J clears the screen, 3J clears the scrollback buffer
     printf '%s' "${ESC}[2J${ESC}[3J${ESC}[H"
 
@@ -151,13 +153,16 @@ render_wide() {
     done
 
     # creates two variables needed here
-    local right_height final_row
+    local left_height right_height final_row
+
+
+    left_height=${#left_lines[@]}
 
     # sets right_height to the number of lines in the right column output array
     right_height=${#right_lines[@]}
 
     # adds 2 to the right_height to account for the top and bottom borders of the terminal, sets it as final_row
-    final_row=$((right_height + 2))
+    final_row=$(( (left_height > right_height ? left_height : right_height) + 2 ))
 
     # adds a 2-line margin after the last line of the right column,
     # so the shell prompt doesn't end up right under the output
