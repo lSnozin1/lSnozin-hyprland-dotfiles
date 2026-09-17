@@ -126,9 +126,8 @@ render_wide() {
         return
     fi
 
-    # transforms the right column output into an array
+    # transforms the right and left columns output into an array
     mapfile -t right_lines < "$rightraw"
-
     mapfile -t left_lines < "$leftraw"
 
     # H moves the cursor to the top left corner of the terminal, 2J clears the screen, 3J clears the scrollback buffer
@@ -152,17 +151,15 @@ render_wide() {
         printf '%s%s' "${ESC}[$((line_index + 1));${RIGHT_COLUMN}H" "$line_current"
     done
 
-    # creates two variables needed here
+    # creates three variables needed here
     local left_height right_height final_row
 
-
+    # sets right_height and left_height to the number of lines in their respective (right and left respectively) column output array
+    right_height=${#right_lines[@]}
     left_height=${#left_lines[@]}
 
-    # sets right_height to the number of lines in the right column output array
-    right_height=${#right_lines[@]}
-
-    # adds 2 to the right_height to account for the top and bottom borders of the terminal, sets it as final_row
-    final_row=$(( (left_height > right_height ? left_height : right_height) + 2 ))
+    # takes the column with the bigger height, and subtracts 4 to compense logo padding to adjust the prompt
+    final_row=$(( (left_height > right_height ? left_height : right_height) - 4 ))
 
     # adds a 2-line margin after the last line of the right column,
     # so the shell prompt doesn't end up right under the output

@@ -11,6 +11,7 @@ end
 function __switch_to_narrow_fetch --on-event fish_preexec
     printf '\033[2J\033[H'
     fastfetch -c ~/.config/fastfetch/narrow-modules.jsonc
+    echo -e "~\n\033[35m›\033[0m $argv[1]"
     functions -e __switch_to_narrow_fetch
 end
 
