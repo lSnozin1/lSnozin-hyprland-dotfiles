@@ -50,13 +50,13 @@ hl.config({
 	},
 	-- Animations section of the hyprland variables
 	animations = {
-		enabled = true,					-- Enable animations, configurable on Animations.lua
+		enabled = true,					-- Enable animations, more on Animations.lua
 	},
 	-- Misc section of the hyprland variables
 	misc = {
 		disable_hyprland_logo = false, 			-- If true disables the random hyprland logo / anime girl background. :(
 		disable_scale_notification = false,		-- disables notification popup when a monitor fails to set a suitable scale
-		force_default_wallpaper = 0, 			-- Set to 0 or 1 to disable the anime mascot wallpapers
+		force_default_wallpaper = 2, 			-- Enforce any of the 3 default wallpapers. 0 - disables the anime background, 1 - disables the anime background, 2 - enables anime background, -1 - random
 		vrr = 1,								-- controls the VRR (Adaptive Sync) of your monitors. 0 - off, 1 - on, 2 - fullscreen only, 3 - fullscreen with video or game content type [0/1/2/3]
 		mouse_move_enables_dpms = false,		-- If DPMS is set to off, wake up the monitors if the mouse moves.
 		key_press_enables_dpms = false,			-- If DPMS is set to off, wake up the monitors if a key is pressed.
@@ -76,7 +76,7 @@ hl.config({
 		exit_window_retains_fullscreen = false,	-- whether closing a fullscreen window makes the next focused window to be fullscreened. 0 - disabled, 1 - enabled, 2 - only when closing a grouped window, 3 - only when closing a non-grouped window [0/1/2/3]
 		initial_workspace_tracking = 1,			-- if enabled, windows will open on the workspace they were invoked on. 0 - disabled, 1 - single-shot, 2 - persistent (all children too)
 		middle_click_paste = true,				-- whether to enable middle-click-paste (aka primary selection)
-		render_unfocused_fps = 1,				-- the maximum limit for render_unfocused windows’ fps in the background (see also Window-Rules - render_unfocused)
+		render_unfocused_fps = 5,				-- the maximum limit for render_unfocused windows’ fps in the background (see also Window-Rules - render_unfocused) [1 - 120]
 		disable_xdg_env_checks = true,			-- disable the warning if XDG environment is externally managed
 		disable_hyprland_guiutils_check = true,	-- disable the warning if hyprland-guiutils is not installed
 		lockdead_screen_delay = 0,				-- delay after which the “lockdead” screen will appear in case a lockscreen app fails to cover all the outputs (5 seconds max)
