@@ -2,8 +2,8 @@
   "name": "custom-icon-theme",
   "private": true,
   "version": "1.0.0",
-  "displayName": "Custom Icon Theme",
-  "description": "Seti + Material icon for .rofi",
+  "displayName": "Celestial Theme",
+  "description": "Seti theme with slightly alterations",
   "publisher": "local",
   "license": "MIT",
   "icon": "icons/seti-circular-128x128.png",
@@ -12,7 +12,7 @@
   "contributes": {
     "iconThemes": [
       {
-        "id": "custom-seti-rofi",
+        "id": "Celestial-Theme",
         "label": "Celestial Theme",
         "path": "./icons/vs-seti-icon-theme.json"
       }

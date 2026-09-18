@@ -22,7 +22,7 @@
         }
     ],
     "iconDefinitions": {
-        "_rofi_Icon":{"iconPath":"rofi-icon.svg"},
+        "_rasi_Icon":{"iconPath":"rofi-icon.png"},
         "_R_light": {
             "fontCharacter": "\\E001",
             "fontColor": "#498ba7"
@@ -1557,7 +1557,7 @@
     },
     "file": "_default",
     "fileExtensions": {
-        "rofi":"_rofi_Icon",
+        "rofi":"_rasi_Icon",
         "bsl": "_bsl",
         "mdo": "_mdo",
         "cls": "_salesforce",
