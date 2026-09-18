@@ -1557,7 +1557,7 @@
     },
     "file": "_default",
     "fileExtensions": {
-        "rofi":"_rasi_Icon",
+        "rasi":"_rasi_Icon",
         "bsl": "_bsl",
         "mdo": "_mdo",
         "cls": "_salesforce",
