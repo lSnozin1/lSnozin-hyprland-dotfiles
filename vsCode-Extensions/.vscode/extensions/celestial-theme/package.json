@@ -13,7 +13,7 @@
     "iconThemes": [
       {
         "id": "custom-seti-rofi",
-        "label": "Seti + Rofi Material",
+        "label": "Celestial Theme",
         "path": "./icons/vs-seti-icon-theme.json"
       }
     ]
