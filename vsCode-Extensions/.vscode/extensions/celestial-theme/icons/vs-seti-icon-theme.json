@@ -22,7 +22,7 @@
         }
     ],
     "iconDefinitions": {
-        "_rasi_Icon":{"iconPath":"rofi-icon.png"},
+        "_rasi_Icon":{"iconPath":"rasi-icon.svg"},
         "_R_light": {
             "fontCharacter": "\\E001",
             "fontColor": "#498ba7"
