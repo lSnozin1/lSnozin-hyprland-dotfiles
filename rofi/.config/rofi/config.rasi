@@ -4,4 +4,4 @@ configuration {
     disable-history: false;
 }
 
-@theme "noctalia"
+@theme "CelestialTheme"
