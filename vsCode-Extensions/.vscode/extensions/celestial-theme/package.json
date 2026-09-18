@@ -1,0 +1,21 @@
+{
+  "name": "custom-icon-theme",
+  "private": true,
+  "version": "1.0.0",
+  "displayName": "Custom Icon Theme",
+  "description": "Seti + Material icon for .rofi",
+  "publisher": "local",
+  "license": "MIT",
+  "icon": "icons/seti-circular-128x128.png",
+  "engines": { "vscode": "*" },
+  "categories": ["Themes"],
+  "contributes": {
+    "iconThemes": [
+      {
+        "id": "custom-seti-rofi",
+        "label": "Seti + Rofi Material",
+        "path": "./icons/vs-seti-icon-theme.json"
+      }
+    ]
+  }
+}
