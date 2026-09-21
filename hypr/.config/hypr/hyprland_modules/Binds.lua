@@ -20,7 +20,7 @@ hl.bind(mainMod .. " + SHIFT + E", 		hl.dsp.exec_cmd(SECONDARY_FILE_MANAGER), { 
 
 hl.bind(mainMod .. " + R", 				hl.dsp.exec_cmd(MENU), { description = "Launch menu" })
 
-hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("pidof resources > /dev/null && hyprctl dispatch 'hl.dsp.workspace.toggle_special(\"resources\")' || " .. MAIN_RESOURCE_MANAGER), { description = "Focus or Open Main Resource Manager" })
+hl.bind(mainMod .. " + B", 				hl.dsp.exec_cmd("pidof resources > /dev/null && hyprctl dispatch 'hl.dsp.workspace.toggle_special(\"resources\")' || " .. MAIN_RESOURCE_MANAGER), { description = "Focus or Open Main Resource Manager" })
 
 
 --	hl.bind(mainMod .. " + SHIFT + B",		hl.dsp.exec_cmd(SECONDARY_RESOURCE_MANAGER), { description = "Launch Secondary Resource Manager"})
