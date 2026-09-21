@@ -10,8 +10,8 @@
 hl.config({
 	input = {
 		-- keyboard general options
-		kb_layout = "br",
-		kb_variant = "abnt2",
+		kb_layout = "us",
+		kb_variant = "altgr-intl",
 		kb_model = "abnt2",
 		kb_options = "",
 		kb_rules = "",
