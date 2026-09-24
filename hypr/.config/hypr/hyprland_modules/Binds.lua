@@ -109,6 +109,8 @@ hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAUL
 -- Closes Hyprland // executes hyprshutdown if available, otherwise it will just exit the session
 hl.bind(mainMod .. " + M",				hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Exit Hyprland" })
 
+-- Locks the Pc with Noctalia Lockscreen
+hl.bind(mainMod .. " + N",				hl.dps.exec_cmd("noctalia msg session lock"), {description = "Lock PC"})
 -----------------
 ---- SUBMAPS ----
 -----------------
