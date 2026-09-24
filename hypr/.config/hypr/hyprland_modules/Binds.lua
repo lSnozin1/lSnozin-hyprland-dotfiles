@@ -85,10 +85,12 @@ hl.bind(mainMod .. " + SHIFT + B",					hl.dsp.workspace.toggle_special("btop"), 
 -------------------
 ---- UTILITIES ----
 -------------------
-
+-- print related keybinds
 hl.bind(mainMod .. " + Print", 				hl.dsp.exec_cmd("hyprshot -m region --freeze --clipboard-only"), { description = "Take screenshot with selection" })
 hl.bind(mainMod .. " + CTRL + Print", 		hl.dsp.exec_cmd("hyprshot -m output -m active"), { description = "Instant Take screenshot" })
 hl.bind(mainMod .. " + SHIFT + Print", 		hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot with selection and edition" })
+
+-- cliphist
 hl.bind(mainMod .. " + V", 					hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "Paste from clipboard history" })
 
 -- Midia keybinds - Requires playerctl
@@ -105,13 +107,17 @@ hl.bind(mainMod .. " + KP_Insert", 			hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_A
 hl.bind(mainMod .. " + KP_Add",      		hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%+"), { locked = true, description = "Increase mic volume" })
 hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-"), { locked = true, description = "Decrease mic volume" })
 
-
--- Closes Hyprland // executes hyprshutdown if available, otherwise it will just exit the session
-hl.bind(mainMod .. " + M",				hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Exit Hyprland" })
+--noctalia side bar toggle
+hl.bind(mainMod .. " + U",					hl.dsp.exec_cmd("noctalia msg bar-toggle utils"), { description = "Toggle Noctalia Sidebar" })
 
 -- Locks the Pc with Noctalia Lockscreen
-hl.bind(mainMod .. " + N",				hl.dsp.exec_cmd("noctalia msg session lock"), { description = "Lock PC" })
+hl.bind(mainMod .. " + N",					hl.dsp.exec_cmd("noctalia msg session lock"), { description = "Lock PC" })
 
+-- Closes Hyprland // executes hyprshutdown if available, otherwise it will just exit the session
+hl.bind(mainMod .. " + M",					hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Exit Hyprland" })
+
+
+-- 
 -----------------
 ---- SUBMAPS ----
 -----------------
