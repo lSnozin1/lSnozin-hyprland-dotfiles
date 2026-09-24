@@ -33,6 +33,9 @@ hl.on("hyprland.start", function()
 	-- permanent btop for special workspace 'btop' (not rlly important) (not part of single instance to allow for custom layout, uses more resources thanks to it though)
 	hl.exec_cmd("[silent] sleep 5 && kitty --class btop-permanent -o confirm_os_window_close=1 -o tab_bar_min_tabs=2 -o window_padding_width=0 -e btop")
 
+	-- Hyprland’s idle management daemon (uncomment if you prefer it over noctalia itself)
+	-- hl.exec_cmd("hypridle")
+
 	-- wallpaper (not that important)
 	hl.exec_cmd("sleep 5 && ~/Applications/waywallen-0.3.7-x86_64.AppImage --no-ui")
 	
