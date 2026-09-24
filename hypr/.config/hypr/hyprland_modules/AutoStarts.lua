@@ -38,6 +38,9 @@ hl.on("hyprland.start", function()
 
 	-- wallpaper (not that important)
 	hl.exec_cmd("sleep 5 && ~/Applications/waywallen-0.3.7-x86_64.AppImage --no-ui")
+
+	-- rClone for gDrive
+	hl.exec_cmd('rclone mount "gDrive:Obsidian" ~/Obsidian --vfs-cache-mode full &')
 	
 	-- Cliphist clipboard (not that important) (can enable if you want though noctalia also has one with a plugin that i personally prefer)
 	-- hl.exec_cmd("wl-paste --type text --watch cliphist store")
