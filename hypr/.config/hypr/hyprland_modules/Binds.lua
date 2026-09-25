@@ -109,7 +109,7 @@ hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAUL
 
 
 --  Opens Workspace Overview (a qml script)
-hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/hypr/utilities/workspace-overview.sh"))
+hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/hypr/utilities/scripts/workspace-overview.sh"))
 
 
 
