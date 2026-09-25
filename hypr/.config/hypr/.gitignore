@@ -1,6 +1,0 @@
-*
-!.gitignore
-!hyprland_modules/
-!hyprland_modules/**
-!hyprland.lua
-!README.md
