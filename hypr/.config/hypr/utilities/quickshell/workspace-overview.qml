@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import "./theme/retro" as RetroTheme
+import "./themes/pinkpink" as RetroTheme
 
 PanelWindow {
     id: overview
@@ -86,7 +86,7 @@ PanelWindow {
         Rectangle {
             anchors.fill: parent
             z: -2
-            color: "#d91d2021"
+            color: RetroTheme.Theme.background
             border.color: RetroTheme.Theme.border
             border.width: 1
             radius: 8
@@ -210,7 +210,7 @@ PanelWindow {
                                     clip: true
                                     ScreencopyView { anchors.fill: parent; anchors.margins: 4; captureSource: modelData.wayland; live: true; constraintSize: Qt.size(parent.width - 8, parent.height - 8) }
                                     Rectangle { anchors.fill: parent; anchors.margins: 2; color: "transparent"; border.color: RetroTheme.Theme.accentAlt; border.width: 1; radius: 2 }
-                                    Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 22; color: "#cc1d2021"; Text { anchors.fill: parent; anchors.margins: 5; text: modelData.title || "WINDOW"; color: RetroTheme.Theme.foreground; font.family: "JetBrains Mono"; font.pixelSize: 9; elide: Text.ElideRight } }
+                                    Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 22; color: RetroTheme.Theme.background; Text { anchors.fill: parent; anchors.margins: 5; text: modelData.title || "WINDOW"; color: RetroTheme.Theme.foreground; font.family: "JetBrains Mono"; font.pixelSize: 9; elide: Text.ElideRight } }
                                     Rectangle { anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 5; width: 28; height: 28; radius: 14; color: closeMouse.containsMouse ? RetroTheme.Theme.red : "#cc1d2021"; border.color: RetroTheme.Theme.border; border.width: 1; z: 10; Text { anchors.centerIn: parent; text: "×"; color: RetroTheme.Theme.foreground; font.pixelSize: 15 } MouseArea { id: closeMouse; anchors.fill: parent; acceptedButtons: Qt.LeftButton; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: overview.closeWindow(modelData) } }
                                 }
                             }
