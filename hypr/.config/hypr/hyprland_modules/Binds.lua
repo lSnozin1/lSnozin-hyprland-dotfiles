@@ -107,8 +107,19 @@ hl.bind(mainMod .. " + KP_Insert", 			hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_A
 hl.bind(mainMod .. " + KP_Add",      		hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%+"), { locked = true, description = "Increase mic volume" })
 hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-"), { locked = true, description = "Decrease mic volume" })
 
+
+--  Opens Workspace Overview (a qml script)
+hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/hypr/utilities/workspace-overview.sh"))
+
+
+
+
+
+
 -- Noctalia side bar toggle
 hl.bind(mainMod .. " + U",					hl.dsp.exec_cmd("noctalia msg bar-toggle utils"), { description = "Toggle Noctalia Sidebar" })
+
+
 
 -- Locks the Pc with Noctalia Lockscreen
 hl.bind(mainMod .. " + N",					hl.dsp.exec_cmd("noctalia msg session lock"), { description = "Lock PC" })
