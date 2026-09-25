@@ -23,6 +23,8 @@ hl.env("QT_QPA_PLATFORMTHEME", "qt6ct") -- forces every Qt6 application to use q
 
 --hl.env("AQ_DRM_DEVICES","/dev/dri/card1:/dev/dri/card0")
 --hl.env ("","")
+hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
+hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 
