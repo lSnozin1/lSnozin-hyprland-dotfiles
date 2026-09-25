@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import "./theme" as RetroTheme
+import "./theme/retro" as RetroTheme
 
 PanelWindow {
     id: overview
