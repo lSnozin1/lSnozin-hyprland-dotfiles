@@ -45,10 +45,6 @@ hl.bind(mainMod .. " + right", 			hl.dsp.focus({ direction = "right" }), { descr
 hl.bind(mainMod .. " + up", 			hl.dsp.focus({ direction = "up" }), { description = "Move focus up" })
 hl.bind(mainMod .. " + down", 			hl.dsp.focus({ direction = "down" }), { description = "Move focus down" })
 
--- Scroll through existing workspaces with mainMod + scroll
-hl.bind(mainMod .. " + mouse_down", 	hl.dsp.focus({ workspace = "e+1" }), { description = "Switch to next workspace" })
-hl.bind(mainMod .. " + mouse_up", 		hl.dsp.focus({ workspace = "e-1" }), { description = "Switch to previous workspace" })
-
 -- Move/resize windows with mainMod + LMB/RMB and dragging
 hl.bind(mainMod .. " + mouse:272", 		hl.dsp.window.drag(), { mouse = true }, { description = "Drag window" })
 hl.bind(mainMod .. " + mouse:273", 		hl.dsp.window.resize(), { mouse = true }, { description = "Resize window" })
@@ -59,6 +55,7 @@ hl.bind(mainMod .. " + J", 				hl.dsp.layout("togglesplit"), { description = "To
 ---------------------------
 ---- GLOBAL WORKSPACES ----
 ---------------------------
+---
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
@@ -67,6 +64,10 @@ for i = 1, 10 do
 	hl.bind(mainMod .. " + " .. key, 		   		hl.dsp.focus({ workspace = i }), { description = "Switch to workspace " .. i })
 	hl.bind(mainMod .. " + SHIFT + " .. key,		hl.dsp.window.move({ workspace = i }), { description = "Move window to workspace " .. i })
 end
+
+-- Scroll through existing workspaces with mainMod + scroll
+hl.bind(mainMod .. " + mouse_down", 	hl.dsp.focus({ workspace = "e+1" }), { description = "Switch to next workspace" })
+hl.bind(mainMod .. " + mouse_up", 		hl.dsp.focus({ workspace = "e-1" }), { description = "Switch to previous workspace" })
 
 
 -- Special Workspaces (scratchpads)
