@@ -129,7 +129,7 @@ hl.config({
 	-- Cursor section of the hyprland variables
 	cursor = {
 		invisible = false,						-- don’t render cursors
-		sync_gsettings_theme = false,			-- sync xcursor theme with gsettings, it applies cursor-theme and cursor-size on theme load to gsettings making most CSD gtk based clients use same xcursor theme and size.
+		sync_gsettings_theme = true,			-- sync xcursor theme with gsettings, it applies cursor-theme and cursor-size on theme load to gsettings making most CSD gtk based clients use same xcursor theme and size.
 		no_hardware_cursors = 0,				-- disables hardware cursors. 0 - use hw cursors if possible, 1 - don’t use hw cursors, 2 - auto (disable when tearing)
 		default_monitor = "PRIMARY_MONITOR"
 	},
