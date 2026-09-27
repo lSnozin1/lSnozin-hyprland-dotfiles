@@ -87,9 +87,10 @@ hl.bind(mainMod .. " + SHIFT + B",					hl.dsp.workspace.toggle_special("btop"), 
 ---- UTILITIES ----
 -------------------
 -- print related keybinds
-hl.bind(mainMod .. " + Print", 				hl.dsp.exec_cmd("hyprshot -m region --freeze --clipboard-only"), { description = "Take screenshot with selection" })
-hl.bind(mainMod .. " + CTRL + Print", 		hl.dsp.exec_cmd("hyprshot -m output -m active"), { description = "Instant Take screenshot" })
-hl.bind(mainMod .. " + SHIFT + Print", 		hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot with selection and edition" })
+hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("grimblast --freeze copy area"), { description = "Take screenshot with selection to clipboard" })
+hl.bind(mainMod .. " + CTRL + Print", hl.dsp.exec_cmd("grimblast copysave active ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png"), { description = "Instant screenshot of active monitor to file and clipboard" })
+hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot with selection and edit with Satty" })
+
 
 -- cliphist
 hl.bind(mainMod .. " + V", 					hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "Paste from clipboard history" })
