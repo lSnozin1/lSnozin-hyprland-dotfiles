@@ -133,6 +133,27 @@ local moveSteamNotificationsRule = hl.window_rule({
     move = {1637, 940},
 })
 
+hl.on("window.title", function(w)
+
+    if w == nil then return end
+    if w.class ~= "steam" then return end
+    if not w.title:match("^notificationtoasts_.*") then return end
+
+    hl.timer(function()
+
+        hl.dispatch(hl.dsp.window.move({
+            window = w,
+            x = 1637,
+            y = 940,
+        }))
+
+    end, {
+        timeout = 500,
+        type = "oneshot"
+    })
+
+end)
+
 --#endregion
 
 -- window rule for Workspace 6 (Launchers)
