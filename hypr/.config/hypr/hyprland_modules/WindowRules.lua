@@ -130,7 +130,7 @@ local moveSteamNotificationsRule = hl.window_rule({
         class = "steam",
         title = "^notificationtoasts_.*",
     },
-    move = "1637 940",
+    move = "exact 1637 940",
 })
 
 --#endregion
