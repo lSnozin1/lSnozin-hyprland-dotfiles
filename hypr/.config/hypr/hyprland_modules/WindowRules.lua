@@ -128,9 +128,9 @@ local moveSteamNotificationsRule = hl.window_rule({
     name = "move-steam-notifications",
     match = {
         class = "steam",
-        title = "notificationtoasts_.*_desktop",
+        title = "^notificationtoasts_.*",
     },
-    move = "100%-320 60",
+    move = "1637 940",
 })
 
 --#endregion
