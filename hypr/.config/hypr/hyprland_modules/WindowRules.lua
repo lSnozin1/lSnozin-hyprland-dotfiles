@@ -105,7 +105,7 @@ hl.on("window.title", checkAndMove)
 -- window rule for Workspace 2 (Code)
 local moveVSCodeRule = hl.window_rule({
 	name = "set-vscode-workspace",
-	match = { class = "code" },
+	match = { class = "^(code|com%.microsoft%.VSCode)$" },
 	workspace = WS.CODE,
 })
 
