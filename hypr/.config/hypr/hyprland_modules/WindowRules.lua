@@ -124,6 +124,15 @@ local moveSoberRule = hl.window_rule({
 	workspace = WS.GAMES,
 })
 
+local moveSteamNotificationsRule = hl.window_rule({
+    name = "move-steam-notifications",
+    match = {
+        class = "steam",
+        title = "notificationtoasts_.*_desktop",
+    },
+    move = "100%-320 60",
+})
+
 --#endregion
 
 -- window rule for Workspace 6 (Launchers)
