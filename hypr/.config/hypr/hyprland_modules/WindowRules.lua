@@ -131,6 +131,7 @@ local moveSteamNotificationsRule = hl.window_rule({
         title = "^notificationtoasts_.*",
     },
     move = "exact 1637 940",
+	suppress_event = "x11configurerequest fullscreen maximize",
 })
 
 --#endregion
