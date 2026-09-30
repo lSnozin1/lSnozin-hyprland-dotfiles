@@ -45,3 +45,5 @@ vram_pct=$(( 100 * vram_used / vram_total ))
 (( cpu_use > CPU_USE_MAX ))   && alert cpu_use  "High CPU usage" "${cpu_use}% in use"
 (( ram_pct > RAM_MAX ))       && alert ram      "RAM almost full" "${ram_pct}% in use"
 (( vram_pct > VRAM_MAX ))     && alert vram     "GPU memory almost full" "${vram_pct}% in use (${vram_used}/${vram_total} MiB)"
+
+exit 0
