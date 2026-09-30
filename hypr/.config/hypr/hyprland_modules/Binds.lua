@@ -121,7 +121,7 @@ hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/hypr/utilities/scripts/workspace
 -- Noctalia side bar toggle
 hl.bind(mainMod .. " + U",					hl.dsp.exec_cmd("noctalia msg bar-toggle utils"), { description = "Toggle Noctalia Sidebar" })
 
-
+hl.bind(mainMod .. " + SHIFT + R",			hl.dsp.exec_cmd("noctalia msg panel-toggle dunarand/bookmarks:panel"))
 
 -- Locks the Pc with Noctalia Lockscreen
 hl.bind(mainMod .. " + N",					hl.dsp.exec_cmd("noctalia msg session lock"), { description = "Lock PC" })
