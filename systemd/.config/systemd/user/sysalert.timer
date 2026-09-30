@@ -2,9 +2,9 @@
 Description=Run sysalert every 30 seconds
 
 [Timer]
-OnBootSec=1min
-OnUnitActiveSec=30s
-AccuracySec=1s
+OnBootSec=1min          # first run 1 minute after boot
+OnUnitActiveSec=30s     # then 30s after the last run started
+AccuracySec=1s          # allowed delay, so systemd can be precise
 
 [Install]
-WantedBy=timers.target
+WantedBy=timers.target  # what "enable" hooks it into, so it starts automatically

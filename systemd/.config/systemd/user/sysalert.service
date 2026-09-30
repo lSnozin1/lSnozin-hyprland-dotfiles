@@ -1,6 +1,6 @@
 [Unit]
-Description=System resource alert check
+Description=System resource alert check    # name shown in logs and status
 
 [Service]
-Type=oneshot
-ExecStart=%h/.local/bin/sysalert.sh
+Type=oneshot                               # run once and exit (not a long-running program)
+ExecStart=%h/.local/bin/sysalert.sh        # the command to run
