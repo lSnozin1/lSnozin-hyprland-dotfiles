@@ -4,9 +4,9 @@
 CPU_TEMP_MAX=85
 GPU_TEMP_MAX=80
 CPU_USE_MAX=90
-RAM_MAX=90
+RAM_MAX=10
 VRAM_MAX=90
-COOLDOWN=300   # seconds between repeated alerts of the same type
+COOLDOWN=10   # seconds between repeated alerts of the same type
 
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/sysalert"
 mkdir -p "$STATE_DIR"
