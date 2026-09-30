@@ -27,6 +27,9 @@ hl.on("hyprland.start", function()
 	-- headless kitty (not that that important but helps with kitty performance and resource usage by a noticiable margin)
 	hl.exec_cmd("kitty --start-as=hidden --single-instance")
 
+	-- toggles noctalia sidebar to be hidden on startup
+	hl.exec_cmd("noctalia msg bar-toggle utils")
+
 	-- permanent kitty for special workspace 'kitty' (not rlly important) 
 	hl.exec_cmd("[silent] sleep 5 && kitty --class kitty-permanent --single-instance")
 
