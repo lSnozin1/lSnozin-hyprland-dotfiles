@@ -118,41 +118,11 @@ local moveSoberRule = hl.window_rule({
 	workspace = WS.GAMES,
 })
 
-local moveSoberRule = hl.window_rule({
+local moveWDRule = hl.window_rule({
 	name = "set-WatchDogs-workspace",
 	match = { class = "steam_app_447040" },
 	workspace = WS.GAMES,
 })
-
-local moveSteamNotificationsRule = hl.window_rule({
-    name = "move-steam-notifications",
-    match = {
-        class = "steam",
-        title = "^notificationtoasts_.*",
-    },
-    move = {1637, 940},
-})
-
-hl.on("window.title", function(w)
-
-    if w == nil then return end
-    if w.class ~= "steam" then return end
-    if not w.title:match("^notificationtoasts_.*") then return end
-
-    hl.timer(function()
-
-        hl.dispatch(hl.dsp.window.move({
-            window = w,
-            x = 1637,
-            y = 940,
-        }))
-
-    end, {
-        timeout = 500,
-        type = "oneshot"
-    })
-
-end)
 
 --#endregion
 
