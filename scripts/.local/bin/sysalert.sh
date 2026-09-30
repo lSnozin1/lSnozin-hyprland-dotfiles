@@ -3,9 +3,9 @@
 # Thresholds
 CPU_TEMP_MAX=85
 GPU_TEMP_MAX=80
-CPU_USE_MAX=90
-RAM_MAX=80
-VRAM_MAX=80
+CPU_USE_MAX=85
+RAM_MAX=85
+VRAM_MAX=85
 COOLDOWN=10   # seconds between repeated alerts of the same type
 
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/sysalert"
