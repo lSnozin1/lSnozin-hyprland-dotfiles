@@ -171,13 +171,13 @@ local moveDiscordRule = hl.window_rule({
 local movePermanentKitty = hl.window_rule({
 	name = "set-kitty-SpecialWorkspace",
 	match = { class = "kitty-permanent" },
-	workspace = "special:kitty"
+	workspace = "special:kitty silent"
 })
 
 local movePermanentBtop = hl.window_rule({
 	name = "set-btop-SpecialWorkspace",
 	match = { class = "btop-permanent" },
-	workspace = "special:btop",
+	workspace = "special:btop silent",
 	no_initial_focus = true
 })
 

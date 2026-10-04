@@ -1,0 +1,10 @@
+\.git
+\.gitignore
+\.gitattributes
+\.directory
+\.vscode
+\.stowrc
+\.stow-local-ignore
+README.*
+sddm
+vsCode-Extensions
