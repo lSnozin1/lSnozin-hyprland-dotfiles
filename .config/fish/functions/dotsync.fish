@@ -36,7 +36,7 @@ function dotsync -d "Aplica dotfiles (stow) e sincroniza o sddm com checagens"
     stow --no-folding $mode $sn -v -d $repo -t ~ vsCode-Extensions; or return 1
 
     # --- sddm: ensaio por conteudo (-c), nao altera nada (-n) ---
-    set -l flags -rlc --delete --chmod=D755,F644
+    set -l flags -rltpc --delete
     set -l changes (rsync $flags -n -i $src $dst); or return 1
 
     set -l conf_diff 0
