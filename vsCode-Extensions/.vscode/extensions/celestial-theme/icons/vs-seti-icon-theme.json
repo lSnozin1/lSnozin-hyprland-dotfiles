@@ -1930,6 +1930,7 @@
         "latex": "_tex",
         "less": "_less",
         "lua": "_lua",
+        "glua": "_lua",
         "makefile": "_makefile",
         "markdown": "_markdown",
         "objective-c": "_c_2",
