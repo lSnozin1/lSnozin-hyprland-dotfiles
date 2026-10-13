@@ -183,7 +183,7 @@ local movePermanentBtop = hl.window_rule({
 
 local moveTemporaryResources = hl.window_rule({
 	name = "set-Resources-SpecialWorkspace",
-	match = { class = "net.nokyan.Resources" },
+	match = { class = "org.gnome.Resources" },
 	workspace = "special:resources",
 	no_initial_focus = true
 })
