@@ -12,8 +12,9 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
     #
     # Modes:
     #   (no flags)     Full run. Stow is applied right away. For sddm it shows
-    #                  the differences and asks "Type 'y' to confirm". Files are
-    #                  copied with sudo, overwritten ones go to the backup.
+    #                  the differences and asks "Type 'y' to confirm" ('y' or
+    #                  'yes' are accepted). Files are copied with sudo,
+    #                  overwritten ones go to the backup.
     #
     #   -n, --dry-run  Simulation only. Stow runs with -n (shows what it would
     #                  link), sddm differences and pending removals are listed,
@@ -37,12 +38,17 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
     #   are in the manifest but no longer in the repo are the only removal
     #   candidates, and they are MOVED to the backup, not deleted.
     #
+    # Ignored files:
+    #   Stray files inside sddm/ in the repo (.directory, .gitignore,
+    #   .gitattributes, .gitkeep, *~, *.swp) are never copied to the system
+    #   and never listed in the manifest.
+    #
     # Files:
     #   ~/.local/state/dotsync/<timestamp>/   backup of overwritten/removed files
     #   ~/.local/state/dotsync/manifest       files installed by the last run
     #
     # Exit code: 0 on success, 1 on error, failed apply or cancelled confirmation.
-    
+
     argparse n/dry-run y/yes c/clean -- $argv; or return 1
 
     set -l repo ~/Documents/lSnozin-hyprland-dotfiles
@@ -51,6 +57,15 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
     set -l conf_src $repo/sddm/etc/sddm.conf
     set -l state ~/.local/state/dotsync
     set -l manifest $state/manifest
+
+    # stray files that must never be copied to the system
+    set -l ignore .directory .gitignore .gitattributes .gitkeep '*~' '*.swp'
+    set -l excl
+    set -l fnd
+    for p in $ignore
+        set -a excl --exclude=$p
+        set -a fnd ! -name $p
+    end
 
     # --- pre-checks ---
     for cmd in stow rsync git
@@ -87,18 +102,19 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
     stow --no-folding $mode $sn -v -d $repo -t ~ vsCode-Extensions; or return 1
 
     # --- sddm: content-based dry run (-c), changes nothing (-n) ---
-    set -l flags -rlpc --chmod=D755,Fa+r,Fgo-w
+    set -l flags -rlpc --chmod=D755,Fa+r,Fgo-w $excl
     set -l changes (rsync $flags -n -i $src $dst); or return 1
 
     set -l conf_diff 0
     cmp -s /etc/sddm.conf $conf_src; or set conf_diff 1
 
     # files dotsync installed last time that are no longer in the repo
-    set -l now (find $src ! -type d -printf '%P\n' | env LC_ALL=C sort)
+    set -l now (find $src ! -type d $fnd -printf '%P\n' | env LC_ALL=C sort)
     set -l gone
     if test -f $manifest
         for f in (env LC_ALL=C comm -23 $manifest (printf '%s\n' $now | psub))
-            string match -qr '(^/|\.\.)' -- $f; and continue
+            test -z "$f"; and continue
+            string match -qr '(^/|(^|/)\.\.(/|$))' -- $f; and continue
             if test -e $dst/$f; or test -L $dst/$f
                 set -a gone $f
             end
@@ -109,7 +125,7 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
 
     if test (count $changes) -eq 0; and test $conf_diff -eq 0; and test (count $gone) -eq 0
         echo "sddm: nothing to update."
-        if not set -q _flag_dry_run
+        if not set -q _flag_dry_run; and test (count $now) -gt 0
             mkdir -p $state; and printf '%s\n' $now >$manifest
         end
     else
@@ -141,7 +157,13 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
             set go 0
         else if test "$need" = yes; or not set -q _flag_yes
             read -l -P "Apply? Type '$need' to confirm: " resp
-            if not string match -qi -- $need "$resp"
+            set -l accepted 0
+            if test "$need" = yes
+                string match -qi -- yes "$resp"; and set accepted 1
+            else
+                string match -qri -- '^(y|yes)$' "$resp"; and set accepted 1
+            end
+            if test $accepted -eq 0
                 echo "sddm: cancelled (stow was already applied)."
                 set go 0
                 set rc 1
@@ -177,7 +199,7 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
             end
 
             if test $ok -eq 1
-                printf '%s\n' $now >$manifest
+                test (count $now) -gt 0; and printf '%s\n' $now >$manifest
                 echo "sddm: applied. Backup in $bk"
             else
                 echo "sddm: FAILED midway (see the error above). Backup in $bk"
