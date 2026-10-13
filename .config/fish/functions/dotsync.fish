@@ -1,4 +1,48 @@
 function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
+    # dotsync - apply dotfiles (stow) and sync sddm files to the system
+    #
+    # Usage: dotsync [-n|--dry-run] [-y|--yes] [-c|--clean]
+    #
+    # What it does, in order:
+    #   1. Pre-checks (tools, repo, sddm files, theme in sddm.conf)
+    #   2. stow: symlinks the repo into ~ (root package + vsCode-Extensions)
+    #   3. sddm: compares the repo with /usr/share/sddm and /etc/sddm.conf,
+    #      shows the differences, asks for confirmation and applies with backup
+    #   4. extras: reports broken links to the repo and uncommitted git changes
+    #
+    # Modes:
+    #   (no flags)     Full run. Stow is applied right away. For sddm it shows
+    #                  the differences and asks "Type 'y' to confirm". Files are
+    #                  copied with sudo, overwritten ones go to the backup.
+    #
+    #   -n, --dry-run  Simulation only. Stow runs with -n (shows what it would
+    #                  link), sddm differences and pending removals are listed,
+    #                  but nothing is changed, no prompt, no sudo, manifest is
+    #                  not updated. Extras still run.
+    #
+    #   -y, --yes      Skips the normal "y" confirmation for sddm.
+    #                  Does NOT skip the removal confirmation: if files will be
+    #                  removed from the system, you must still type 'yes'.
+    #
+    #   -c, --clean    Stow runs in restow mode (-R) instead of -S: it unlinks
+    #                  and relinks everything, which also removes dangling links
+    #                  to files you deleted from the repo. The sddm part is
+    #                  not affected.
+    #
+    #   Flags can be combined, e.g. "dotsync -n -c" simulates a clean restow.
+    #
+    # Removals (sddm):
+    #   rsync runs WITHOUT --delete, so default sddm files are never touched.
+    #   dotsync keeps a manifest of the files it installed last time. Files that
+    #   are in the manifest but no longer in the repo are the only removal
+    #   candidates, and they are MOVED to the backup, not deleted.
+    #
+    # Files:
+    #   ~/.local/state/dotsync/<timestamp>/   backup of overwritten/removed files
+    #   ~/.local/state/dotsync/manifest       files installed by the last run
+    #
+    # Exit code: 0 on success, 1 on error, failed apply or cancelled confirmation.
+    
     argparse n/dry-run y/yes c/clean -- $argv; or return 1
 
     set -l repo ~/Documents/lSnozin-hyprland-dotfiles
