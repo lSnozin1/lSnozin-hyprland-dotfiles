@@ -13,7 +13,7 @@ Screenshot=docs/previews/default.png
 TranslationsDirectory=translations
 QtVersion=6
 
-ConfigFile=configs/meucustom.conf
+ConfigFile=configs/Celestial.conf
 # ConfigFile=configs/default-left.conf
 # ConfigFile=configs/default-right.conf
 # ConfigFile=configs/rei.conf
