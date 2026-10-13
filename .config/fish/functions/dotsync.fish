@@ -22,7 +22,7 @@ function dotsync -d "Aplica dotfiles (stow) e sincroniza o sddm com checagens"
         return 1
     end
     if not test -d $src/themes; or not test -s $conf_src
-        echo "sddm no repo incompleto, abortando (evita --delete perigoso)"
+        echo "sddm no repo incompleto, abortando"
         return 1
     end
 
@@ -36,7 +36,7 @@ function dotsync -d "Aplica dotfiles (stow) e sincroniza o sddm com checagens"
     stow --no-folding $mode $sn -v -d $repo -t ~ vsCode-Extensions; or return 1
 
     # --- sddm: ensaio por conteudo (-c), nao altera nada (-n) ---
-    set -l flags -rltpc --delete
+    set -l flags -rltpc
     set -l changes (rsync $flags -n -i $src $dst); or return 1
 
     set -l conf_diff 0
@@ -45,9 +45,7 @@ function dotsync -d "Aplica dotfiles (stow) e sincroniza o sddm com checagens"
     if test (count $changes) -eq 0; and test $conf_diff -eq 0
         echo "sddm: nada a atualizar."
     else
-        set -l dels
         if test (count $changes) -gt 0
-            set dels (printf '%s\n' $changes | string match '*deleting*')
             echo "sddm: diferencas em /usr/share/sddm ("(count $changes)" itens):"
             printf '%s\n' $changes | head -n 30
             test (count $changes) -gt 30; and echo "... e mais "(math (count $changes) - 30)
@@ -59,17 +57,9 @@ function dotsync -d "Aplica dotfiles (stow) e sincroniza o sddm com checagens"
 
         set -q _flag_dry_run; and return 0
 
-        set -l need s
-        if test (count $dels) -gt 0
-            set need sim
-            set_color red
-            echo "ATENCAO: "(count $dels)" arquivo(s) serao REMOVIDOS do sistema."
-            set_color normal
-        end
-
-        if test "$need" = sim; or not set -q _flag_yes
-            read -l -P "Aplicar? Digite '$need' para confirmar: " resp
-            if not string match -qi -- $need $resp
+        if not set -q _flag_yes
+            read -l -P "Aplicar? Digite 's' para confirmar: " resp
+            if not string match -qi -- s $resp
                 echo "Cancelado."
                 return 1
             end
