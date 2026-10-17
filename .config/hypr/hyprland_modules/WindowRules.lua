@@ -78,7 +78,9 @@ local fixSteamToasts = hl.window_rule({
     name = "fix-Steam-Toasts",
     match = {class = "steam", title = "^notificationtoasts" },
     float = true,
-    suppress_event = "x11configurerequest fullscreen maximize",
+	pin = true,
+	move = {100, 100},
+	suppress_event = "fullscreen maximize activate activatefocus fullscreenoutput x11configurerequest",
 })
 
 
