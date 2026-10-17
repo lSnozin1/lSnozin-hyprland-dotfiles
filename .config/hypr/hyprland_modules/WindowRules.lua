@@ -74,6 +74,14 @@ hl.window_rule({
 ---- Custom Window Rules ----
 -----------------------------
 
+local fixSteamToasts = hl.window_rule({
+    name = "fix-Steam-Toasts",
+    match = {class = "steam", title = "^notificationtoasts" },
+    float = true,
+    suppress_event = "x11configurerequest fullscreen maximize",
+})
+
+
 --#region CustomVisibleWindowRules
 -- window rules that visible does things
 
