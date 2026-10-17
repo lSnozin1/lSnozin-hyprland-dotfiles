@@ -3,7 +3,7 @@ Name=Discord
 StartupWMClass=discord
 Comment= Discord with x11 to allow global keybinds
 GenericName=Internet Messenger
-Exec=/usr/bin/discord --ozone-platform=x11 --url -- %u
+Exec=/usr/bin/discord --ozone-platform=x11 --enable-blink-features=MiddleClickAutoscroll --url -- %u
 Icon=discord
 Type=Application
 Categories=Network;InstantMessaging;
