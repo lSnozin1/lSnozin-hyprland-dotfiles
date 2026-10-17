@@ -96,7 +96,7 @@ hl.on("window.open", function(w)
     end
 
     local address = w.address
-	local delays = {150, 300, 600, 900}
+	local delays = {50, 200, 400, 900}
     local timers = {}
 
     steamToastTimers[address] = timers
