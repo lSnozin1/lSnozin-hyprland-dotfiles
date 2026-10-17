@@ -74,6 +74,7 @@ hl.window_rule({
 ---- Custom Window Rules ----
 -----------------------------
 
+--#region STEAM TOASTS FIX HELL
 local fixSteamToasts = hl.window_rule({
     name = "fix-Steam-Toasts",
     match = {class = "steam", title = "^notificationtoasts_.*", },
@@ -133,6 +134,7 @@ hl.on("window.open", function(w)
     end
 end)
 
+--#endregion
 --#region CustomVisibleWindowRules
 -- window rules that visible does things
 
