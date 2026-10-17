@@ -73,49 +73,21 @@ hl.window_rule({
 -----------------------------
 ---- Custom Window Rules ----
 -----------------------------
-
+--[[
 local fixSteamToasts = hl.window_rule({
     name = "fix-Steam-Toasts",
-    match = {
-        class = "steam",
-        title = "^notificationtoasts_.*",
-    },
+    match = {class = "steam", title = "^notificationtoasts_.*", },
     float = true,
-    pin = true,
-    no_focus = true,
-    no_initial_focus = true,
-    suppress_event = "fullscreen maximize activate activatefocus fullscreenoutput x11configurerequest",
-    opacity = "0.8",
+	--tile = true,
+	pin = true,
+	move = {100, 100},
+	no_focus = true,
+	no_initial_focus = true,
+	size = {400, 400},
+	suppress_event = "fullscreen maximize activate activatefocus fullscreenoutput x11configurerequest",
+	opacity = "0.8",
 })
-
-local steamToastTimers = {}
-local steamToastOutput = "HDMI-A-1"
-
-hl.on("window.open", function(w)
-    if not w or w.class ~= "steam" then return end
-    if not w.title or not w.title:match("^notificationtoasts_") then return end
-    if not w.address then return end
-
-    local address = w.address
-
-    steamToastTimers[address] = hl.timer(function()
-        steamToastTimers[address] = nil
-
-        local toast = hl.get_window("address:" .. address)
-        local mon = hl.get_monitor(steamToastOutput)
-
-        if not toast or not mon or not toast.size then return end
-
-        local gap = 16
-
-        hl.dispatch(hl.dsp.window.move({
-            window = toast,
-            x = mon.position.x + mon.width - toast.size.x - gap,
-            y = mon.position.y + gap,
-        }))
-    end, { timeout = 150, type = "oneshot" })
-end)
-
+--]]
 
 --#region CustomVisibleWindowRules
 -- window rules that visible does things
