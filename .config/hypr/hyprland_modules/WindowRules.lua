@@ -76,9 +76,9 @@ hl.window_rule({
 
 --#region STEAM TOASTS FIX HELL
 local fixSteamToasts = hl.window_rule({
-    name = "fix-Steam-Toasts",
-    match = {class = "steam", title = "^notificationtoasts_.*", },
-    float = true,
+	name = "fix-Steam-Toasts",
+	match = { class = "steam", title = "^notificationtoasts_.*", },
+	float = true,
 	--tile = true,
 	pin = true,
 	--move = {100, 100},
@@ -91,47 +91,46 @@ local fixSteamToasts = hl.window_rule({
 local steamToastTimers = {}
 
 hl.on("window.open", function(w)
-    if w.class ~= "steam" or not w.title
-        or not w.title:match("^notificationtoasts_") then
-        return
-    end
+	if w.class ~= "steam" or not w.title
+		or not w.title:match("^notificationtoasts_") then
+		return
+	end
 
-    local address = w.address
-	local delays = {50, 200, 400, 900}
-    local timers = {}
+	local address = w.address
+	local delays = { 50, 200, 400, 900 }
+	local timers = {}
 
-    steamToastTimers[address] = timers
+	steamToastTimers[address] = timers
 
-    for i, delay in ipairs(delays) do
-        local isLast = i == #delays
+	for i, delay in ipairs(delays) do
+		local isLast = i == #delays
 
-        local timer = hl.timer(function()
-            for _, toast in ipairs(hl.get_windows({ class = "steam" })) do
-                if toast.address == address
-                    and toast.title
-                    and toast.title:match("^notificationtoasts_") then
+		local timer = hl.timer(function()
+			for _, toast in ipairs(hl.get_windows({ class = "steam" })) do
+				if toast.address == address
+					and toast.title
+					and toast.title:match("^notificationtoasts_") then
+					hl.dispatch(hl.dsp.window.move({
+						window = toast,
+						x = 1637,
+						y = 980,
+						relative = false,
+					}))
 
-                    hl.dispatch(hl.dsp.window.move({
-                        window = toast,
-                        x = 1637,
-                        y = 980,
-                        relative = false,
-                    }))
+					break
+				end
+			end
 
-                    break
-                end
-            end
+			if isLast then
+				steamToastTimers[address] = nil
+			end
+		end, {
+			timeout = delay,
+			type = "oneshot",
+		})
 
-            if isLast then
-                steamToastTimers[address] = nil
-            end
-        end, {
-            timeout = delay,
-            type = "oneshot",
-        })
-
-        table.insert(timers, timer)
-    end
+		table.insert(timers, timer)
+	end
 end)
 
 --#endregion
@@ -148,15 +147,15 @@ local perfil2Workspace = WS.WEB_KITTY
 local firefoxHandled = {}
 
 local function checkAndMove(w)
-    if w == nil or firefoxHandled[w.pid] then return end
-	
-    if w.title:match("— " .. perfil1 .. " —") then
-        hl.dispatch(hl.dsp.window.move({ workspace = perfil1Workspace, follow = true, window = w }))
-        firefoxHandled[w.pid] = true
-    elseif w.title:match("— " .. perfil2 .. " —") then
-        hl.dispatch(hl.dsp.window.move({ workspace = perfil2Workspace, follow = true, window = w }))
-        firefoxHandled[w.pid] = true
-    end
+	if w == nil or firefoxHandled[w.pid] then return end
+
+	if w.title:match("— " .. perfil1 .. " —") then
+		hl.dispatch(hl.dsp.window.move({ workspace = perfil1Workspace, follow = true, window = w }))
+		firefoxHandled[w.pid] = true
+	elseif w.title:match("— " .. perfil2 .. " —") then
+		hl.dispatch(hl.dsp.window.move({ workspace = perfil2Workspace, follow = true, window = w }))
+		firefoxHandled[w.pid] = true
+	end
 end
 
 hl.on("window.open", checkAndMove)
@@ -165,9 +164,9 @@ hl.on("window.title", checkAndMove)
 
 -- window rule for Workspace 2 (Code)
 local moveVSCodeRule = hl.window_rule({
-    name = "set-vscode-workspace",
-    match = { class = "^(code|com\\.microsoft\\.VSCode)$" },
-    workspace = WS.CODE,
+	name = "set-vscode-workspace",
+	match = { class = "^(code|com\\.microsoft\\.VSCode)$" },
+	workspace = WS.CODE,
 })
 
 -- window rules for Workspace 3 (Games)
@@ -188,12 +187,12 @@ local moveWDRule = hl.window_rule({
 --#endregion
 
 -- window rule for Workspace 6 (Launchers)
---[[ 
+--[[
 local moveSteamRule = hl.window_rule({
 	name = "set-steam-workspace",
 	match = { class = "steam"},
 	workspace = WS.LAUNCHERS .. " silent",
-}) 
+})
 ]]
 
 -- fixes deltarune window going off monitor, while also setting it to worspace Games
@@ -204,7 +203,7 @@ local moveDeltaruneRule = hl.window_rule({
 	float = true,
 	size = "1280 960",
 	center = true,
-	move = {100, 100},
+	move = { 100, 100 },
 	suppress_event = "x11configurerequest fullscreen maximize",
 })
 

@@ -1,6 +1,10 @@
 {
     "gitdoc.enabled": true,
     "Lua.diagnostics.disable": [
-        "different-requires"
-    ]
+        "different-requires",
+        "unused-local",
+        "unused-function",
+        "unused-vararg"
+    ],
+    "stylua.targetReleaseVersion": "latest"
 }
