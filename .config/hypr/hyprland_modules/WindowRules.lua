@@ -80,6 +80,9 @@ local fixSteamToasts = hl.window_rule({
     float = true,
 	pin = true,
 	move = {100, 100},
+	no_focus = true,
+	no_initial_focus = true,
+	opacity = "0.4",
 	suppress_event = "fullscreen maximize activate activatefocus fullscreenoutput x11configurerequest",
 })
 
