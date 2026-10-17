@@ -6,5 +6,8 @@
         "unused-function",
         "unused-vararg"
     ],
+    "glualint.activeLanguages": [
+        "glua"
+    ],
     "stylua.targetReleaseVersion": "latest"
 }
