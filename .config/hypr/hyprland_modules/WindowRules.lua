@@ -76,13 +76,13 @@ hl.window_rule({
 
 local fixSteamToasts = hl.window_rule({
     name = "fix-Steam-Toasts",
-    match = {class = "steam", title = "^notificationtoasts" },
+    match = {class = "steam", title = "^notificationtoasts_.*", },
     float = true,
 	pin = true,
 	move = {100, 100},
 	no_focus = true,
 	no_initial_focus = true,
-	opacity = "0.4",
+	opacity = "0.8",
 	suppress_event = "fullscreen maximize activate activatefocus fullscreenoutput x11configurerequest",
 })
 
