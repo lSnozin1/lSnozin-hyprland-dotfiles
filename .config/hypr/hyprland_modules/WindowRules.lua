@@ -78,6 +78,7 @@ local fixSteamToasts = hl.window_rule({
     name = "fix-Steam-Toasts",
     match = {class = "steam", title = "^notificationtoasts_.*", },
     float = true,
+	--tile = true,
 	pin = true,
 	move = {100, 100},
 	no_focus = true,
