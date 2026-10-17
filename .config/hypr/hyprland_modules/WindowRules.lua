@@ -73,7 +73,7 @@ hl.window_rule({
 -----------------------------
 ---- Custom Window Rules ----
 -----------------------------
---[[
+
 local fixSteamToasts = hl.window_rule({
     name = "fix-Steam-Toasts",
     match = {class = "steam", title = "^notificationtoasts_.*", },
@@ -86,7 +86,7 @@ local fixSteamToasts = hl.window_rule({
 	--size = {400, 400},
 	suppress_event = "fullscreen maximize activate activatefocus fullscreenoutput x11configurerequest",
 })
---]]
+
 local steamToastTimers = {}
 
 hl.on("window.open", function(w)
@@ -96,7 +96,7 @@ hl.on("window.open", function(w)
     end
 
     local address = w.address
-	local delays = {50, 100, 180, 300}
+	local delays = {150, 300, 600, 900}
     local timers = {}
 
     steamToastTimers[address] = timers
