@@ -73,21 +73,66 @@ hl.window_rule({
 -----------------------------
 ---- Custom Window Rules ----
 -----------------------------
---[[
+
 local fixSteamToasts = hl.window_rule({
     name = "fix-Steam-Toasts",
     match = {class = "steam", title = "^notificationtoasts_.*", },
     float = true,
 	--tile = true,
 	pin = true,
-	move = {100, 100},
+	--move = {100, 100},
 	no_focus = true,
 	no_initial_focus = true,
-	size = {400, 400},
+	--size = {400, 400},
 	suppress_event = "fullscreen maximize activate activatefocus fullscreenoutput x11configurerequest",
 	opacity = "0.8",
 })
---]]
+
+local steamToastTimers = {}
+
+hl.on("window.open", function(w)
+    if w.class ~= "steam" or not w.title
+        or not w.title:match("^notificationtoasts_") then
+        return
+    end
+
+    local address = w.address
+    local delays = {150, 300, 600, 900}
+    local timers = {}
+
+    steamToastTimers[address] = timers
+
+    for i, delay in ipairs(delays) do
+        local isLast = i == #delays
+
+        local timer = hl.timer(function()
+            for _, toast in ipairs(hl.get_windows({ class = "steam" })) do
+                if toast.address == address
+                    and toast.title
+                    and toast.title:match("^notificationtoasts_") then
+
+                    hl.dispatch(hl.dsp.window.move({
+                        window = toast,
+                        x = 1637,
+                        y = 940,
+                        relative = false,
+                    }))
+
+                    break
+                end
+            end
+
+            if isLast then
+                steamToastTimers[address] = nil
+            end
+        end, {
+            timeout = delay,
+            type = "oneshot",
+        })
+
+        table.insert(timers, timer)
+    end
+end)
 
 --#region CustomVisibleWindowRules
 -- window rules that visible does things
