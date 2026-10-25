@@ -13,7 +13,7 @@ hl.config({
 		kb_layout = "us",
 		kb_variant = "altgr-intl",
 		kb_model = "abnt2",
-		kb_options = "",
+		kb_options = "fkeys:basic_13-24",
 		kb_rules = "",
 		repeat_rate = 20,
 		repeat_delay = 350,
