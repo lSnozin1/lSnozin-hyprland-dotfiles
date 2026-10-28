@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Run Sober via flatpak and save a log with header and exit code to a fixed folder
+LOG_DIR="/home/lsnozin/Documents/_docs_/Logs/Sober"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/sober_$(date +%Y-%m-%d_%H-%M-%S)_$$.log"
+ln -sfn "$LOG_FILE" "$LOG_DIR/latest.log"
+find "$LOG_DIR" -maxdepth 1 -type f -name "sober_*.log" -mtime +30 -delete
+echo "wrapper: start=$(date -Is) kernel=$(uname -r) nvidia=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null)" > "$LOG_FILE"
+START=$(date +%s)
+/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=sober --file-forwarding org.vinegarhq.Sober -- "$@" >> "$LOG_FILE" 2>&1
+CODE=$?
+END=$(date +%s)
+echo "wrapper: exit_code=$CODE duration=$((END - START))s decoder_failures=$(grep -c -F "decoding failure" "$LOG_FILE")" >> "$LOG_FILE"
+if [ "$CODE" -gt 128 ]; then echo "wrapper: killed by signal $(kill -l $((CODE - 128)))" >> "$LOG_FILE"; fi
+exit "$CODE"
