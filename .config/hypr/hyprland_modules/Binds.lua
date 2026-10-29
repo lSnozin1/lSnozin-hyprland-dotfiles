@@ -149,9 +149,8 @@ hl.bind(mainMod .. " + M",					hl.dsp.exec_cmd("command -v hyprshutdown >/dev/nu
 -- end)
 
 
---------------------------------
----- Custom Global Keybinds ----
---------------------------------
+--------------------------------------------------
+---- Custom Global Keybinds for specific apps ----
+--------------------------------------------------
 
-local DiscMute = "Scroll_Lock"
-hl.bind(DiscMute, 						hl.dsp.pass({ window = "class:^(discord)$" }), { description = "Mutes Mic on discord" })
+hl.bind("Scroll_Lock", hl.dsp.global("discord:discord-toggle-mute"), { description = "Toggle mute on Discord" })
