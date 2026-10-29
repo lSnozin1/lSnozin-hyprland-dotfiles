@@ -6,27 +6,43 @@
 #   - everything Sober prints (stdout + stderr)
 #   - a footer with exit code, duration, signal, Sober crash reports, kernel warnings,
 #     coredumps and the most repeated log lines
-# The final file name ends with the result (ok, crash, signal or error).
+# The final file name ends with the result: ok, closed (user closed the window),
+# crash, signal or error.
 # Launch arguments are never logged: web launches carry an authentication ticket.
 
-LOG_DIR="/home/lsnozin/Documents/_docs_/Logs/Sober"
+LOG_DIR="$HOME/Documents/_docs_/Logs/Sober"
 APP_ID="org.vinegarhq.Sober"
 APP_DATA="$HOME/.var/app/$APP_ID/data/sober"
 KEEP_DAYS_OK=30
 KEEP_DAYS_PROBLEM=180
 
+run_sober() {
+    exec /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=sober --file-forwarding "$APP_ID" -- "$@"
+}
+
 # Logs may contain account and session IDs, so keep them private
 OLD_UMASK="$(umask)"
 umask 077
-mkdir -p "$LOG_DIR"
+# Logging is optional: if the log directory is unusable, still start Sober
+if ! mkdir -p "$LOG_DIR" 2> /dev/null || [ ! -w "$LOG_DIR" ]; then
+    umask "$OLD_UMASK"
+    run_sober "$@"
+fi
 
-STAMP="$(date +%Y-%m-%d_%H-%M-%S)_$$"
-LOG_FILE="$LOG_DIR/sober_${STAMP}_running.log"
+# Name format: YYYY-MM-DD_HH-MM-SS_result.log (a counter is added only on a same-second collision)
+STAMP="$(date +%Y-%m-%d_%H-%M-%S)"
+BASE="$STAMP"
+COUNTER=1
+while compgen -G "$LOG_DIR/${BASE}_*.log" > /dev/null; do
+    COUNTER=$((COUNTER + 1))
+    BASE="${STAMP}-${COUNTER}"
+done
+LOG_FILE="$LOG_DIR/${BASE}_running.log"
 ln -sfn "$LOG_FILE" "$LOG_DIR/latest.log"
 
 # Rotation: clean sessions expire sooner than sessions with problems
-find "$LOG_DIR" -maxdepth 1 -type f -name "sober_*_ok.log" -mtime +"$KEEP_DAYS_OK" -delete
-find "$LOG_DIR" -maxdepth 1 -type f -name "sober_*.log" ! -name "sober_*_ok.log" -mtime +"$KEEP_DAYS_PROBLEM" -delete
+find "$LOG_DIR" -maxdepth 1 -type f \( -name "*_ok.log" -o -name "*_closed.log" \) -mtime +"$KEEP_DAYS_OK" -delete
+find "$LOG_DIR" -maxdepth 1 -type f -name "2???-??-??_*.log" ! -name "*_ok.log" ! -name "*_closed.log" -mtime +"$KEEP_DAYS_PROBLEM" -delete
 
 case "$*" in
     *roblox*) LAUNCH="web" ;;
@@ -47,17 +63,15 @@ CHILD=""
 trap '[ -n "$CHILD" ] && kill -TERM "$CHILD" 2>/dev/null' TERM INT HUP
 
 # Sober must run with the original umask, not the private one used for the logs
-umask "$OLD_UMASK"
-/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=sober --file-forwarding "$APP_ID" -- "$@" >> "$LOG_FILE" 2>&1 &
+( umask "$OLD_UMASK"; run_sober "$@" ) >> "$LOG_FILE" 2>&1 &
 CHILD=$!
-umask 077
+# wait returns early every time a trapped signal arrives; keep waiting for the real exit status
 wait "$CHILD"
 CODE=$?
-# wait returns early when a trapped signal arrives; wait again for the real exit status
-if kill -0 "$CHILD" 2>/dev/null; then
+while kill -0 "$CHILD" 2>/dev/null; do
     wait "$CHILD"
     CODE=$?
-fi
+done
 END=$(date +%s)
 
 SIGNAL=""
@@ -73,10 +87,19 @@ LOG_LINES="$(wc -l < "$LOG_FILE")"
 LOG_SIZE="$(du -h "$LOG_FILE" | cut -f1)"
 TOP_REPEATED="$(grep -a -v '^wrapper:' "$LOG_FILE" | sed -E 's/[0-9]+/N/g' | sort | uniq -c | sort -rn | head -n 5 | cut -c1-170)"
 
-if [ -n "$CRASH_REPORTS" ]; then
+# A crash report file alone is not proof of a crash: closing the window can also leave one behind.
+# Crash = fatal signal, or crash report together with an abnormal exit code.
+# Closed = termination signal, or crash report with a clean exit (reports stay listed in the footer).
+if [[ " SEGV ABRT BUS ILL FPE " == *" $SIGNAL "* ]]; then
     RESULT="crash"
+elif [[ " TERM INT HUP " == *" $SIGNAL "* ]]; then
+    RESULT="closed"
 elif [ -n "$SIGNAL" ]; then
     RESULT="signal"
+elif [ -n "$CRASH_REPORTS" ] && [ "$CODE" -ne 0 ]; then
+    RESULT="crash"
+elif [ -n "$CRASH_REPORTS" ]; then
+    RESULT="closed"
 elif [ "$CODE" -ne 0 ]; then
     RESULT="error"
 else
@@ -103,7 +126,7 @@ section() {
     section "most repeated lines (numbers collapsed to N)" "$TOP_REPEATED"
 } >> "$LOG_FILE"
 
-FINAL_FILE="$LOG_DIR/sober_${STAMP}_${RESULT}.log"
+FINAL_FILE="$LOG_DIR/${BASE}_${RESULT}.log"
 mv -f "$LOG_FILE" "$FINAL_FILE"
 if [ "$(readlink "$LOG_DIR/latest.log")" = "$LOG_FILE" ]; then
     ln -sfn "$FINAL_FILE" "$LOG_DIR/latest.log"
