@@ -1,15 +1,113 @@
 #!/usr/bin/env bash
-# Run Sober via flatpak and save a log with header and exit code to a fixed folder
+# sober-logged: run Sober through flatpak and keep one self-describing log per session.
+#
+# Each log contains:
+#   - a header with system context (kernel, GPU driver, Sober version, session type, free RAM/disk)
+#   - everything Sober prints (stdout + stderr)
+#   - a footer with exit code, duration, signal, Sober crash reports, kernel warnings,
+#     coredumps and the most repeated log lines
+# The final file name ends with the result (ok, crash, signal or error).
+# Launch arguments are never logged: web launches carry an authentication ticket.
+
 LOG_DIR="/home/lsnozin/Documents/_docs_/Logs/Sober"
+APP_ID="org.vinegarhq.Sober"
+APP_DATA="$HOME/.var/app/$APP_ID/data/sober"
+KEEP_DAYS_OK=30
+KEEP_DAYS_PROBLEM=180
+
+# Logs may contain account and session IDs, so keep them private
+OLD_UMASK="$(umask)"
+umask 077
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/sober_$(date +%Y-%m-%d_%H-%M-%S)_$$.log"
+
+STAMP="$(date +%Y-%m-%d_%H-%M-%S)_$$"
+LOG_FILE="$LOG_DIR/sober_${STAMP}_running.log"
 ln -sfn "$LOG_FILE" "$LOG_DIR/latest.log"
-find "$LOG_DIR" -maxdepth 1 -type f -name "sober_*.log" -mtime +30 -delete
-echo "wrapper: start=$(date -Is) kernel=$(uname -r) nvidia=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null)" > "$LOG_FILE"
+
+# Rotation: clean sessions expire sooner than sessions with problems
+find "$LOG_DIR" -maxdepth 1 -type f -name "sober_*_ok.log" -mtime +"$KEEP_DAYS_OK" -delete
+find "$LOG_DIR" -maxdepth 1 -type f -name "sober_*.log" ! -name "sober_*_ok.log" -mtime +"$KEEP_DAYS_PROBLEM" -delete
+
+case "$*" in
+    *roblox*) LAUNCH="web" ;;
+    *) LAUNCH="app" ;;
+esac
+
+{
+    echo "wrapper: start=$(date -Is) launch=$LAUNCH pid=$$"
+    echo "wrapper: kernel=$(uname -r) session=${XDG_SESSION_TYPE:-unknown} desktop=${XDG_CURRENT_DESKTOP:-unknown}"
+    echo "wrapper: gpu=$(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null || echo unknown)"
+    echo "wrapper: sober=$(flatpak info "$APP_ID" 2>/dev/null | awk '/^ *(Version|Commit):/ {gsub(/^ +/, ""); printf "%s ", $0}')"
+    echo "wrapper: mem_available=$(awk '/MemAvailable/ {printf "%d MiB", $2 / 1024}' /proc/meminfo) log_dir_free=$(df -h --output=avail "$LOG_DIR" | tail -n 1 | tr -d ' ')"
+} > "$LOG_FILE"
+
 START=$(date +%s)
-/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=sober --file-forwarding org.vinegarhq.Sober -- "$@" >> "$LOG_FILE" 2>&1
+CHILD=""
+# Forward termination signals so the footer is still written
+trap '[ -n "$CHILD" ] && kill -TERM "$CHILD" 2>/dev/null' TERM INT HUP
+
+# Sober must run with the original umask, not the private one used for the logs
+umask "$OLD_UMASK"
+/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=sober --file-forwarding "$APP_ID" -- "$@" >> "$LOG_FILE" 2>&1 &
+CHILD=$!
+umask 077
+wait "$CHILD"
 CODE=$?
+# wait returns early when a trapped signal arrives; wait again for the real exit status
+if kill -0 "$CHILD" 2>/dev/null; then
+    wait "$CHILD"
+    CODE=$?
+fi
 END=$(date +%s)
-echo "wrapper: exit_code=$CODE duration=$((END - START))s decoder_failures=$(grep -c -F "decoding failure" "$LOG_FILE")" >> "$LOG_FILE"
-if [ "$CODE" -gt 128 ]; then echo "wrapper: killed by signal $(kill -l $((CODE - 128)))" >> "$LOG_FILE"; fi
+
+SIGNAL=""
+if [ "$CODE" -gt 128 ]; then
+    SIGNAL="$(kill -l $((CODE - 128)) 2>/dev/null)"
+fi
+
+CRASH_REPORTS="$(find "$APP_DATA/crashes" -type f -newermt "@$START" -printf '%f\n' 2>/dev/null)"
+SOBER_LOGS="$(find "$APP_DATA/sober_logs" -type f -newermt "@$START" 2>/dev/null)"
+KERNEL_WARN="$(journalctl -k -p warning --since "@$START" --until "@$((END + 1))" --no-pager -q 2>/dev/null | tail -n 40)"
+COREDUMPS="$(coredumpctl list --since "@$START" --no-pager -q 2>/dev/null | tail -n 10)"
+LOG_LINES="$(wc -l < "$LOG_FILE")"
+LOG_SIZE="$(du -h "$LOG_FILE" | cut -f1)"
+TOP_REPEATED="$(grep -a -v '^wrapper:' "$LOG_FILE" | sed -E 's/[0-9]+/N/g' | sort | uniq -c | sort -rn | head -n 5 | cut -c1-170)"
+
+if [ -n "$CRASH_REPORTS" ]; then
+    RESULT="crash"
+elif [ -n "$SIGNAL" ]; then
+    RESULT="signal"
+elif [ "$CODE" -ne 0 ]; then
+    RESULT="error"
+else
+    RESULT="ok"
+fi
+
+section() {
+    # Print a titled block, or "(none)" when the content is empty
+    echo "wrapper: $1"
+    if [ -n "$2" ]; then
+        printf '%s\n' "$2" | sed 's/^/wrapper:   /'
+    else
+        echo "wrapper:   (none)"
+    fi
+}
+
+{
+    echo "wrapper: end=$(date -Is) exit_code=$CODE signal=${SIGNAL:-none} duration=$((END - START))s result=$RESULT"
+    echo "wrapper: log_lines=$LOG_LINES log_size=$LOG_SIZE"
+    section "sober crash reports (in $APP_DATA/crashes)" "$CRASH_REPORTS"
+    section "sober own logs of this session" "$SOBER_LOGS"
+    section "kernel warnings during the session" "$KERNEL_WARN"
+    section "coredumps during the session" "$COREDUMPS"
+    section "most repeated lines (numbers collapsed to N)" "$TOP_REPEATED"
+} >> "$LOG_FILE"
+
+FINAL_FILE="$LOG_DIR/sober_${STAMP}_${RESULT}.log"
+mv -f "$LOG_FILE" "$FINAL_FILE"
+if [ "$(readlink "$LOG_DIR/latest.log")" = "$LOG_FILE" ]; then
+    ln -sfn "$FINAL_FILE" "$LOG_DIR/latest.log"
+fi
+printf '%s\t%ss\texit=%s\tresult=%s\t%s\n' "$(date -Is)" "$((END - START))" "$CODE" "$RESULT" "$(basename "$FINAL_FILE")" >> "$LOG_DIR/sessions.log"
+
 exit "$CODE"
