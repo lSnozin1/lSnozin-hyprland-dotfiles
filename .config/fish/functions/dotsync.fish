@@ -51,7 +51,7 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
 
     argparse n/dry-run y/yes c/clean -- $argv; or return 1
 
-    set -l repo ~/Documents/lSnozin-hyprland-dotfiles
+    set -l repo ~/Projects/lSnozin-hyprland-dotfiles
     set -l src $repo/sddm/usr/share/sddm/
     set -l dst /usr/share/sddm/
     set -l conf_src $repo/sddm/etc/sddm.conf
