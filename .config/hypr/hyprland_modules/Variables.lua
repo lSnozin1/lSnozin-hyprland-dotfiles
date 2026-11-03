@@ -81,7 +81,7 @@ hl.config({
 		disable_hyprland_guiutils_check = true,	-- disable the warning if hyprland-guiutils is not installed
 		lockdead_screen_delay = 0,				-- delay after which the “lockdead” screen will appear in case a lockscreen app fails to cover all the outputs (5 seconds max)
 		enable_anr_dialog = false,				-- whether to enable the ANR (app not responding) dialog when your apps hang
-		anr_missed_pings = 0,					-- number of missed pings before showing the ANR dialog
+		anr_missed_pings = 5,					-- number of missed pings before showing the ANR dialog
 		size_limits_tiled = false,				-- whether to apply min_size and max_size rules to tiled windows
 		screencopy_force_8b = false,			-- forces 8 bit screencopy
 		disable_watchdog_warning = true,		-- whether to disable the warning about not using start-hyprland
@@ -168,7 +168,7 @@ hl.config({
 		full_cm_proto = false,					-- claims support for all cm proto features (requires restart)
 		ds_handle_same_buffer = true,			-- special case for direct scanout with unmodified buffer
 		ds_handle_same_buffer_fifo = true,		-- special case for direct scanout with unmodified buffer unlocks fifo
-		fifo_pending_workaround = true,			-- fifo workaround for empty pending list
+		-- fifo_pending_workaround = true,			-- fifo workaround for empty pending list
 		render_solitary_wo_damage = true,		-- render solitary window with empty damage
 		invalidate_fp16 = 0,					-- Allow fp16 buffer invalidation (invalidation increases performance but produces glitches on some systems). 0 - not allowed, 1 - allowed, 2 - not allowed on nvidia
 	},
