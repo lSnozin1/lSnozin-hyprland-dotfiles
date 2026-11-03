@@ -91,10 +91,6 @@ hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("grimblast --freeze copy area"), 
 hl.bind(mainMod .. " + F13", hl.dsp.exec_cmd("grimblast copysave active ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png"), { description = "Instant screenshot of active monitor to file and clipboard" })
 hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd("grimblast --freeze save area - | satty --filename -"), { description = "Take screenshot with selection and edit with Satty" })
 
-
--- cliphist
-hl.bind(mainMod .. " + V", 					hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "Paste from clipboard history" })
-
 -- Midia keybinds - Requires playerctl
 hl.bind("XF86AudioNext", 					hl.dsp.exec_cmd("playerctl next"), { locked = true, description = "Next track" })
 hl.bind("XF86AudioPause", 					hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/Pause" })
