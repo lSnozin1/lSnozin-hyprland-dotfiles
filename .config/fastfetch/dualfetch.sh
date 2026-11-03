@@ -60,12 +60,11 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 # sets run fastfetch as a function to be able to call it with different parameters, pretty much the main part of the script
 run_fastfetch() {
-    # $1 = config file | $2 = output file
+    # $1 = config file | $2 = output file | $3... = extra fastfetch args
     local config="$1" outfile="$2"
-
-    # sets the timeout for the fastfetch call, if it takes longer than this, it will just open the terminal without fastfetch
+    shift 2
     timeout "${FASTFETCH_TIMEOUT}s" fastfetch \
-        -c "$config" --pipe false >"$outfile" 2>/dev/null
+        -c "$config" --pipe false "$@" >"$outfile" 2>/dev/null
 }
 
 # renders the two columns side by side when the terminal is wide enough
@@ -88,7 +87,7 @@ render_wide() {
     local RIGHT_COLUMN
 
     # finds the logo source on the config.jsonc file, sets it as a variable
-    logo_source=$( sed -nE 's/^[[:space:]]*"source"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' \ "$LEFT_CONFIG" | head -n1 )
+    logo_source=$( sed -nE 's/^[[:space:]]*"source"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$LEFT_CONFIG" | head -n1 )
 
     # finds the logo extension, sets it as a variable
     logo_ext="${logo_source##*.}"
@@ -171,8 +170,12 @@ render_narrow() {
     # defines the temp file for the narrow fastfetch output, will be cleaned up on exit
     local narrow_fastfetch_output="$tmpdir/narrow_output.raw"
 
-    # executes fastfetch with the narrow-modules.jsonc, and saves the output on the temp file above
-    run_fastfetch "$NARROW_MODULES_CONFIG" "$narrow_fastfetch_output" &
+    # VS Code terminal does not support the kitty graphics protocol, use iTerm inline images instead
+    local extra_args=()
+    if [[ "${TERM_PROGRAM:-}" == "vscode" ]]; then
+        extra_args=(--logo-type iterm)
+    fi
+    run_fastfetch "$NARROW_MODULES_CONFIG" "$narrow_fastfetch_output" "${extra_args[@]}" &
     
     # saves the id of the above process
     local narrow_fastfetch_pid=$!
@@ -207,7 +210,7 @@ main() {
 
     # here it's where the script decides the mode to use, if cols >= wide threshold that is set at the beginning it uses the wide fetch mode
     # like, if cols is 80, and the threeshold is the default 160, then 80 >= 160 is not valid, so it does not render wide, and goes to render the narrow version
-    if (( cols >= WIDE_THRESHOLD )); then
+    if [[ "${TERM_PROGRAM:-}" != "vscode" ]] && (( cols >= WIDE_THRESHOLD )); then
         render_wide
     else
         render_narrow
