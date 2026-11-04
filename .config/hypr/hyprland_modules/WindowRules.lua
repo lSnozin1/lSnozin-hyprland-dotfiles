@@ -137,7 +137,7 @@ end)
 --#region CustomVisibleWindowRules
 -- window rules that visible does things
 
--- windows rule for Workspace 1 & 4 (firefox profiles)
+-- windows for firefox Profiles (workspaces 1 & 4, for main and kitty respectively)
 local perfil1 = "Main"
 local perfil1Workspace = WS.WEB
 
@@ -161,6 +161,15 @@ end
 hl.on("window.open", checkAndMove)
 hl.on("window.title", checkAndMove)
 
+-- Block screen share for specific Firefox profiles / sensitive apps in general
+local noScreenShareSensoredApps = hl.window_rule({
+	name = "noscreenshare-sensored-apps",
+	match = {
+		class = "^(firefox)$",
+		title = ".*— mhmhm —.*",
+	},
+	no_screen_share = true,
+})
 
 -- window rule for Workspace 2 (Code)
 local moveVSCodeRule = hl.window_rule({
