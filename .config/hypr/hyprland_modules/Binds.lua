@@ -66,8 +66,8 @@ for i = 1, 10 do
 end
 
 -- Scroll through existing workspaces with mainMod + scroll
-hl.bind(mainMod .. " + mouse_down", 	hl.dsp.focus({ workspace = "e+1" }), { description = "Switch to next workspace" })
-hl.bind(mainMod .. " + mouse_up", 		hl.dsp.focus({ workspace = "e-1" }), { description = "Switch to previous workspace" })
+--hl.bind(mainMod .. " + mouse_down", 	hl.dsp.focus({ workspace = "e+1" }), { description = "Switch to next workspace" })
+--hl.bind(mainMod .. " + mouse_up", 		hl.dsp.focus({ workspace = "e-1" }), { description = "Switch to previous workspace" })
 
 
 -- Special Workspaces (scratchpads)
@@ -111,6 +111,17 @@ hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/hypr/utilities/scripts/workspace
 
 
 
+-- Faster mouse scroll while Super is held.
+
+-- Listens to every keyboard event and changes input.scroll_factor on the fly.
+hl.on("input.keyboard.key", function(keycode, _, state)
+    -- keycode: XKB keycode (133 = Super_L, 134 = Super_R)
+    -- state:   0 = released, 1 = pressed, 2 = key repeat (ignored)
+    if (keycode == 133 or keycode == 134) and state ~= 2 then
+        -- Super pressed -> 10.0 (fast), Super released -> 1.0 (normal)
+        hl.config({ input = { scroll_factor = state == 1 and 10.0 or 1.0 } })
+    end
+end)
 
 
 
