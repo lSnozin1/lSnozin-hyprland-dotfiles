@@ -31,6 +31,15 @@ function __dualfetch_resize --on-signal WINCH
     end
 end
 
+# zoxide
+zoxide init fish | source
+
+# fzf
+set -gx FZF_CTRL_T_COMMAND 'fd --type f --hidden --exclude .git'
+set -gx FZF_CTRL_T_OPTS "--preview 'bat --color=always --style=numbers {}' --preview-window 'right:60%:wrap'"
+
+fzf --fish | source
+
 # overwrite greeting
 # potentially disabling fastfetch
 #function fish_greeting
