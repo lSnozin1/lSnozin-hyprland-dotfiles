@@ -1,0 +1,49 @@
+# ==============================================================================
+# RIPGREP CONFIGURATION FILE
+# Location: ~/.config/ripgrep/ripgreprc (loaded via RIPGREP_CONFIG_PATH)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Search behavior
+# ------------------------------------------------------------------------------
+# Case-insensitive unless the pattern contains an uppercase letter
+--smart-case
+
+# Fall back to the PCRE2 engine automatically when a pattern needs it
+# (lookahead, lookbehind, backreferences) so -P is not required
+--engine=auto
+
+# ------------------------------------------------------------------------------
+# 2. Visibility and exclusions
+# ------------------------------------------------------------------------------
+# Include hidden files and directories (.env, dotfiles, ...)
+--hidden
+
+# Exclude VCS metadata and heavy directories that are noisy outside git repos
+--glob=!.git/
+--glob=!node_modules/
+--glob=!.venv/
+--glob=!.cache/
+
+# Exclude lock files, minified files, source maps and SVG (huge, unreadable lines)
+--glob=!package-lock.json
+--glob=!yarn.lock
+--glob=!pnpm-lock.yaml
+--glob=!*.min.*
+--glob=!*.map
+--glob=!*.svg
+
+# ------------------------------------------------------------------------------
+# 3. Output safety
+# ------------------------------------------------------------------------------
+# Do not flood the terminal with very long lines; show a short preview instead
+--max-columns=300
+--max-columns-preview
+
+# ------------------------------------------------------------------------------
+# 4. Custom file types
+# ------------------------------------------------------------------------------
+# Usage: rg -t web pattern / rg -t config pattern
+--type-add=web:*.{html,css,js,ts,jsx,tsx,vue,svelte}
+--type-add=config:*.{json,jsonc,yaml,yml,toml,ini}
+--type-add=config:.env*

@@ -40,6 +40,8 @@ set -gx FZF_CTRL_T_OPTS "--preview 'bat --color=always --style=numbers {}' --pre
 
 fzf --fish | source
 
+set -gx RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
+
 # overwrite greeting
 # potentially disabling fastfetch
 #function fish_greeting
