@@ -5,6 +5,7 @@
 \.vscode
 \.stowrc
 \.stow-local-ignore
+^Extra$
 README.*
 sddm
 vsCode-Extensions

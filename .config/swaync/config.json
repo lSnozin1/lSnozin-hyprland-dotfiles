@@ -1,0 +1,64 @@
+{
+  "$schema": "/etc/xdg/swaync/configSchema.json",
+  "positionX": "right",
+  "positionY": "top",
+  "layer": "overlay",
+  "control-center-layer": "top",
+  "layer-shell": true,
+  "cssPriority": "user",
+  "control-center-margin-top": 10,
+  "control-center-margin-bottom": 10,
+  "control-center-margin-right": 10,
+  "control-center-margin-left": 0,
+  "control-center-width": 500,
+  "control-center-height": 1000,
+  "fit-to-screen": false,
+  "notification-window-width": 500,
+  "notification-body-image-height": 100,
+  "notification-body-image-width": 200,
+  "image-visibility": "when-available",
+  "timeout": 10,
+  "timeout-low": 5,
+  "timeout-critical": 0,
+  "transition-time": 200,
+  "hide-on-clear": false,
+  "hide-on-action": true,
+  "keyboard-shortcuts": true,
+  "script-fail-notify": true,
+  "widgets": [
+    "label",
+    "title",
+    "dnd",
+    "notifications",
+    "mpris",
+    "volume",
+    "buttons-grid"
+  ],
+  "widget-config": {
+    "label": {
+      "text": "Welcome :3",
+      "max-lines": 1
+    },
+    "title": {
+      "text": "Notifications",
+      "clear-all-button": true,
+      "button-text": "Clean All"
+    },
+    "dnd": {
+      "text": "Do Not Disturb"
+    },
+    "volume": {
+      "label": "\uf028"
+    },
+    "buttons-grid": {
+      "buttons-per-row": 5,
+      "actions": [
+        { "label": "\uf1de", "command": "pavucontrol" },
+        { "label": "\uf030", "command": "grimblast --freeze save area - | satty --filename -'" },
+        { "label": "\uf120", "command": "kitty --single-instance" },
+        { "label": "\uf07b", "command": "dolphin" },
+        { "label": "\uf023", "command": "noctalia msg session lock" }
+      ]
+    }
+  }
+}

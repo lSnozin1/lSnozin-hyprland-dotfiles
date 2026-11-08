@@ -1,10 +1,28 @@
 {
-    "gitdoc.enabled": true,
-    "Lua.diagnostics.disable": [
-        "different-requires",
-        "unused-local",
-        "unused-function",
-        "unused-vararg"
-    ],
-    "stylua.targetReleaseVersion": "latest",
+  // --- General & Integrations ---
+  "gitdoc.enabled": true,
+  "css.validate": false,
+
+  // --- Code Formatting (StyLua) ---
+  "stylua.targetReleaseVersion": "latest",
+
+  // --- Standard Lua (sumneko.lua) ---
+  "Lua.diagnostics.disable": [
+    "different-requires",
+    "unused-local",
+    "unused-function",
+    "unused-vararg"
+  ],
+  // --- Luau Language Server (luau-lsp) ---
+  "luau-lsp.platform.type": "standard",
+  "luau-lsp.sourcemap.enabled": false,
+  "luau-lsp.types.definitionFiles": {
+    "noctalia": "Extra/Noctalia/noctalia.d.luau"
+  },
+  "luau-lsp.analyzeLuaFiles": false,
+
+  "files.associations": {
+    "*.lua": "lua",
+    "*.luau": "luau"
+  }
 }

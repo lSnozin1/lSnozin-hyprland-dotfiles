@@ -1,0 +1,9 @@
+[[plugin]]
+id = "lsnow/swaync-bell"
+name = "swaync Bell"
+version = "1.0.0"
+plugin_api = 3
+author = "lsnow"
+license = "MIT"
+icon = "bell"
+description = "Bell widget whose glyph follows swaync state."
