@@ -17,16 +17,18 @@ hl.env("__GL_GSYNC_ALLOWED", "1") -- Controls if G-Sync capable monitors should 
 
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct") -- forces every Qt6 application to use qt6ct for theming
 
+hl.env("MOZ_DISABLE_RDD_SANDBOX", "1")
+hl.env("NVD_BACKEND", "direct")
 
 
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Environment-variables/
 
 --hl.env("AQ_DRM_DEVICES","/dev/dri/card1:/dev/dri/card0")
 --hl.env ("","")
-hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
-hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
-hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("HYPRCURSOR_THEME", "Hatsune_Miku_Cursor")
+hl.env("XCURSOR_THEME", "Hatsune_Miku_Cursor")
+hl.env("XCURSOR_SIZE", "28")
+hl.env("HYPRCURSOR_SIZE", "28")
 
 -- hl.env("__NV_PRIME_RENDER_OFFLOAD_PROVIDER","NVIDIA-G0")
 -- hl.env("__VK_LAYER_NV_optimus","NVIDIA_only")
