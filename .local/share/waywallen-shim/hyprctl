@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Wrapper around hyprctl for waywallen:
+# 1. adds a placeholder "id" to workspace objects missing it (Hyprland 0.57
+#    omits "id" for special workspaces)
+# 2. for waywallen-layer only: marks windows as maximized (fullscreen = 1)
+#    when the visible windows of a monitor cover COVER_THRESHOLD percent
+#    or more of it, so tiled apps pause the wallpaper like fullscreen ones
+
+REAL_HYPRCTL="/usr/bin/hyprctl"
+PLACEHOLDER_ID=-99
+COVER_THRESHOLD=95
+
+wants_json=false
+top_level=false
+subcmd=""
+for arg in "$@"; do
+    case "$arg" in
+        --*) ;;
+        -*j*) wants_json=true ;;
+        workspaces|activeworkspace) top_level=true ;;
+        clients|activewindow) subcmd="$arg" ;;
+    esac
+done
+
+# Pass through untouched when the output is not JSON or jq is missing
+if ! $wants_json || ! command -v jq >/dev/null 2>&1; then
+    exec "$REAL_HYPRCTL" "$@"
+fi
+
+# Coverage rewrite only for the waywallen layer-shell client
+cover=false
+mon="[]"
+cli="[]"
+if [ -n "$subcmd" ]; then
+    case "$(ps -o comm= -p "$PPID" 2>/dev/null)" in
+        waywallen-layer*)
+            mon=$("$REAL_HYPRCTL" -j monitors 2>/dev/null)
+            cli=$("$REAL_HYPRCTL" -j clients 2>/dev/null)
+            if [ -n "$mon" ] && [ -n "$cli" ]; then cover=true; else mon="[]"; cli="[]"; fi
+            ;;
+    esac
+fi
+
+out=$("$REAL_HYPRCTL" "$@")
+status=$?
+
+fixed=$(printf '%s' "$out" | jq \
+    --argjson pid "$PLACEHOLDER_ID" --argjson top "$top_level" \
+    --argjson cover "$cover" --argjson thr "$COVER_THRESHOLD" \
+    --argjson mon "$mon" --argjson cli "$cli" '
+    def fix:
+        if type == "object" and (has("id") | not) and has("address")
+        then . + {id: $pid} else . end;
+    def fixkey($k):
+        if (type == "object") and ((.[$k]? | type) == "object")
+        then .[$k] |= fix else . end;
+    def area: .size[0] * .size[1];
+    def layer_cover($m; $addr):
+        [$cli[] | select(.mapped and (.hidden | not)
+            and .monitor == $m.id and .workspace.address == $addr)] as $w
+        | ([$w[] | select(.floating | not) | area] | add // 0) as $tiled
+        | ([$w[] | select(.floating) | area] | max // 0) as $float
+        | ([$tiled, $float] | max);
+    def covering($m):
+        [$m.activeWorkspace.address, ($m.specialWorkspace.address // "")]
+        | map(select(. != ""))
+        | map(. as $a | select(layer_cover($m; $a) * 100 >= $thr * ($m.width * $m.height)));
+    def cover_clients:
+        ([$mon[] | {key: (.id | tostring), value: covering(.)}] | from_entries) as $cov
+        | $cli | map(
+            .workspace.address as $wa
+            | if .fullscreen == 0 and .mapped and (.hidden | not)
+                 and ((($cov[(.monitor | tostring)] // []) | index($wa)) != null)
+              then .fullscreen = 2 | .fullscreenClient = 2 else . end);
+    def apply_cover:
+        if $cover | not then .
+        elif type == "array" then cover_clients
+        elif type == "object" then
+            . as $in
+            | (cover_clients | map(select(.address == $in.address)) | first) as $f
+            | if $f then . + {fullscreen: $f.fullscreen, fullscreenClient: $f.fullscreenClient} else . end
+        else . end;
+    (if $top then (if type == "array" then map(fix) else fix end) else . end)
+    | apply_cover
+    | walk(fixkey("workspace") | fixkey("activeWorkspace") | fixkey("specialWorkspace"))
+' 2>/dev/null)
+
+if [ $? -eq 0 ] && [ -n "$fixed" ]; then
+    printf '%s\n' "$fixed"
+else
+    printf '%s\n' "$out"
+fi
+exit "$status"
