@@ -138,38 +138,41 @@ end)
 -- window rules that visible does things
 
 -- windows for firefox Profiles (workspaces 1 & 4, for main and kitty respectively)
-local perfil1 = "Main"
-local perfil1Workspace = WS.WEB
-
-local perfil2 = "kitty"
-local perfil2Workspace = WS.WEB_KITTY
-
-local firefoxHandled = {}
+local profileWs = { Main = WS.WEB, kitty = WS.WEB_KITTY }
+local handled = {}
 
 local function checkAndMove(w)
-	if w == nil or firefoxHandled[w.pid] then return end
-
-	if w.title:match("— " .. perfil1 .. " —") then
-		hl.dispatch(hl.dsp.window.move({ workspace = perfil1Workspace, follow = true, window = w }))
-		firefoxHandled[w.pid] = true
-	elseif w.title:match("— " .. perfil2 .. " —") then
-		hl.dispatch(hl.dsp.window.move({ workspace = perfil2Workspace, follow = true, window = w }))
-		firefoxHandled[w.pid] = true
-	end
+    if w.class ~= "firefox" or handled[w.address] then return end
+    local target = profileWs[(w.title or ""):match("(%w+) — Mozilla Firefox$")]
+    if target then
+        handled[w.address] = true
+        hl.dispatch(hl.dsp.window.move({ workspace = target, follow = true, window = w }))
+    end
 end
 
 hl.on("window.open", checkAndMove)
 hl.on("window.title", checkAndMove)
 
--- Block screen share for specific Firefox profiles / sensitive apps in general
+-- Block screen share section for privacy
+
 local noScreenShareSensoredApps = hl.window_rule({
-	name = "noscreenshare-sensored-apps",
-	match = {
-		class = "^(firefox)$",
-		title = ".*— mhmhm —.*",
-	},
-	no_screen_share = true,
+    name = "noscreenshare-sensored-apps",
+    match = {
+        class = "^(firefox)$",
+        title = "^mhmhm —.*",
+    },
+    no_screen_share = true,
 })
+
+-- Catch-all rule: Censors any of these apps unconditionally by class
+local sensoredCatchAll = hl.window_rule({
+    name = "noscreenshare-apps-catchall",
+    match = {
+        class = "^(notepad\\+\\+\\.exe)$",
+    },
+    no_screen_share = true,
+})
+
 
 -- window rule for Workspace 2 (Code)
 local moveVSCodeRule = hl.window_rule({

@@ -109,8 +109,6 @@ hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAUL
 --  Opens Workspace Overview (a qml script)
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/hypr/utilities/scripts/workspace-overview.sh"))
 
-
-
 -- Faster mouse scroll while Super is held.
 
 -- Listens to every keyboard event and changes input.scroll_factor on the fly.
