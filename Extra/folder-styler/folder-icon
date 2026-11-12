@@ -1,0 +1,628 @@
+#!/usr/bin/env python3
+"""
+folder-icon - Generate and apply custom Breeze-style folder icons as SVG files.
+
+Usage:
+    folder-icon list
+    folder-icon make <symbol|none> <hex-color> [--out <dir>] [--symbol-color <hex>] [--scale <val>]
+    folder-icon apply <folder-path>... <symbol|none> <hex-color> [--symbol-color <hex>] [--scale <val>] [--force]
+    folder-icon reset <folder-path>... [--force]
+    folder-icon info <folder-path>...
+    folder-icon gc [--dry-run] [--force]
+    folder-icon alias [<target> to <alias> | remove <alias>] [--force]
+"""
+
+from pathlib import Path
+import sys
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from folder_icon_core import (
+    LUCIDE_SYMBOLS,
+    MAX_SYMBOL_SCALE,
+    MIN_SYMBOL_SCALE,
+    OUTPUT_DIR,
+    SYMBOL_DIR,
+    SYMBOL_SCALE,
+    FolderIconError,
+    apply_desktop_icon,
+    build_folder_svg,
+    canonical_symbol_name,
+    check_alias_plan,
+    delete_cached_icons,
+    ensure_dirs,
+    get_all_symbols,
+    get_existing_directory_contents,
+    icon_path,
+    inspect_directory_icon,
+    load_custom_symbols,
+    normalize_hex,
+    parse_scale,
+    remove_alias,
+    reset_desktop_icon,
+    scan_cache_usage,
+    set_alias,
+    write_icon,
+)
+
+
+def die(msg: str) -> None:
+    print(f"Error: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def confirm(prompt: str) -> bool:
+    try:
+        return input(f"{prompt} [y/N] ").strip().lower() == "y"
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return False
+
+
+def confirm_batch(prompt: str) -> str:
+    """Prompt for batch confirmations; returns 'y', 'a' (all), or 'n'."""
+    try:
+        ans = input(f"{prompt} [y/N/a(ll)] ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return "n"
+    if ans in ("a", "all"):
+        return "a"
+    if ans in ("y", "yes"):
+        return "y"
+    return "n"
+
+
+def format_bytes(num_bytes: int) -> str:
+    if num_bytes < 1024:
+        return f"{num_bytes} B"
+    return f"{num_bytes / 1024.0:.1f} KB"
+
+
+def validate_symbol(name: str, all_symbols: dict[str, str]) -> str | None:
+    if name == "none":
+        return None
+    if name not in all_symbols:
+        die(
+            f"Unknown symbol '{name}'. Run 'folder-icon list' to see available symbols.\n"
+            f"  Tip: drop a 24x24 Lucide SVG into {SYMBOL_DIR}/<name>.svg to add custom symbols."
+        )
+    return name
+
+
+def validate_color(hex_color: str) -> str:
+    try:
+        return normalize_hex(hex_color)
+    except FolderIconError as exc:
+        die(str(exc))
+        return ""
+
+
+def validate_scale(raw_scale: str) -> float:
+    try:
+        return parse_scale(raw_scale)
+    except FolderIconError as exc:
+        die(str(exc))
+        return SYMBOL_SCALE
+
+
+# ---------------------------------------------------------------------------
+# COMMANDS
+# ---------------------------------------------------------------------------
+
+def cmd_list(_args: list[str]) -> None:
+    _, aliases = get_all_symbols()
+    builtin_exact = sorted(LUCIDE_SYMBOLS.keys())
+    custom_result = load_custom_symbols(return_invalid=True)
+    assert isinstance(custom_result, tuple)
+    custom_loaded, invalid_custom = custom_result
+
+    print("Built-in official Lucide symbols (match lucide.dev exactly):")
+    for name in builtin_exact:
+        print(f"  {name}")
+
+    if aliases:
+        print("\nAliases (built-in & user-defined):")
+        for alias_name, target in sorted(aliases.items()):
+            print(f"  {alias_name} -> {target}")
+
+    if custom_loaded:
+        print(f"\nCustom symbols (from {SYMBOL_DIR}):")
+        for name in sorted(custom_loaded.keys()):
+            tag = " [overrides built-in]" if name in LUCIDE_SYMBOLS else ""
+            print(f"  {name}{tag}")
+    else:
+        print("\nCustom symbols: none")
+        print(f"  (drop any 24x24 *.svg files from lucide.dev into {SYMBOL_DIR}/ to add your own)")
+
+    if invalid_custom:
+        print(f"\nSkipped custom files in {SYMBOL_DIR} (did not meet prerequisites):")
+        for entry in invalid_custom:
+            print(f"  {entry}")
+
+
+def cmd_alias(args: list[str]) -> None:
+    force = "--force" in args or "-f" in args
+    clean_args = [a for a in args if a not in ("--force", "-f")]
+
+    _, aliases = get_all_symbols()
+
+    if not clean_args:
+        print("Current aliases:")
+        if not aliases:
+            print("  (none)")
+        for alias_name, target in sorted(aliases.items()):
+            print(f"  {alias_name} -> {target}")
+        return
+
+    if clean_args[0].lower() in ("remove", "rm", "delete"):
+        if len(clean_args) != 2:
+            die("Usage: folder-icon alias remove <alias>")
+        target_alias = clean_args[1].lower()
+        try:
+            remove_alias(target_alias)
+            print(f"Removed alias: '{target_alias}'")
+        except FolderIconError as exc:
+            die(str(exc))
+        return
+
+    if len(clean_args) == 3 and clean_args[1].lower() == "to":
+        raw_target, raw_alias = clean_args[0], clean_args[2]
+    elif len(clean_args) == 3 and clean_args[1].lower() in ("=", "as"):
+        raw_alias, raw_target = clean_args[0], clean_args[2]
+    elif len(clean_args) == 2:
+        raw_target, raw_alias = clean_args[0], clean_args[1]
+    else:
+        die(
+            "Usage: folder-icon alias <target> to <alias> [--force]\n"
+            "   or: folder-icon alias remove <alias>\n"
+            "   or: folder-icon alias (to list)"
+        )
+        return
+
+    try:
+        plan = check_alias_plan(raw_target, raw_alias)
+    except FolderIconError as exc:
+        die(str(exc))
+        return
+
+    target_name = plan["target"]
+    alias_name = plan["alias"]
+
+    if plan["already_identical"]:
+        print(f"Alias '{alias_name}' already points to '{target_name}'.")
+        return
+
+    for warning in plan["warnings"]:
+        print(f"WARNING: {warning}")
+
+    if plan["warnings"] and not force:
+        if not confirm(f"Set alias '{alias_name}' -> '{target_name}'?"):
+            print("Aborted. No changes made.")
+            return
+
+    set_alias(target_name, alias_name)
+    print(f"Alias created: {alias_name} -> {target_name}")
+
+
+def cmd_make(args: list[str]) -> None:
+    positional: list[str] = []
+    out_dir: Path | None = None
+    symbol_color: str | None = None
+    scale_ratio: float = SYMBOL_SCALE
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--out":
+            if i + 1 >= len(args):
+                die("--out requires a directory argument")
+            out_dir = Path(args[i + 1]).expanduser().resolve()
+            i += 2
+        elif arg.startswith("--out="):
+            out_dir = Path(arg.split("=", 1)[1]).expanduser().resolve()
+            i += 1
+        elif arg == "--symbol-color":
+            if i + 1 >= len(args):
+                die("--symbol-color requires a hex color argument")
+            symbol_color = validate_color(args[i + 1])
+            i += 2
+        elif arg.startswith("--symbol-color="):
+            symbol_color = validate_color(arg.split("=", 1)[1])
+            i += 1
+        elif arg == "--scale":
+            if i + 1 >= len(args):
+                die("--scale requires a numeric argument (e.g. 0.45 or 55%)")
+            scale_ratio = validate_scale(args[i + 1])
+            i += 2
+        elif arg.startswith("--scale="):
+            scale_ratio = validate_scale(arg.split("=", 1)[1])
+            i += 1
+        elif arg.startswith("-"):
+            die(f"Unknown flag: {arg}")
+        else:
+            positional.append(arg)
+            i += 1
+
+    if len(positional) != 2:
+        die(
+            "Usage: folder-icon make <symbol|none> <hex-color> "
+            "[--out <dir>] [--symbol-color <hex>] [--scale <val>]"
+        )
+
+    all_symbols, aliases = get_all_symbols()
+    symbol = validate_symbol(positional[0].lower(), all_symbols)
+    hex_color = validate_color(positional[1])
+
+    ensure_dirs()
+    svg = build_folder_svg(
+        hex_color=hex_color,
+        symbol=symbol,
+        symbol_color=symbol_color,
+        all_symbols=all_symbols,
+        scale_ratio=scale_ratio,
+    )
+    out_path = icon_path(
+        symbol=symbol,
+        hex_color=hex_color,
+        out_dir=out_dir,
+        symbol_color=symbol_color,
+        scale_ratio=scale_ratio,
+        aliases=aliases,
+    )
+    write_icon(svg, out_path)
+    print(out_path)
+
+
+def cmd_apply(args: list[str]) -> None:
+    positional: list[str] = []
+    symbol_color: str | None = None
+    scale_ratio: float = SYMBOL_SCALE
+    force = False
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--symbol-color":
+            if i + 1 >= len(args):
+                die("--symbol-color requires a hex color argument")
+            symbol_color = validate_color(args[i + 1])
+            i += 2
+        elif arg.startswith("--symbol-color="):
+            symbol_color = validate_color(arg.split("=", 1)[1])
+            i += 1
+        elif arg == "--scale":
+            if i + 1 >= len(args):
+                die("--scale requires a numeric argument (e.g. 0.45 or 55%)")
+            scale_ratio = validate_scale(args[i + 1])
+            i += 2
+        elif arg.startswith("--scale="):
+            scale_ratio = validate_scale(arg.split("=", 1)[1])
+            i += 1
+        elif arg in ("--force", "-f"):
+            force = True
+            i += 1
+        elif arg.startswith("-"):
+            die(f"Unknown flag: {arg}")
+        else:
+            positional.append(arg)
+            i += 1
+
+    if len(positional) < 3:
+        die(
+            "Usage: folder-icon apply <folder-path>... <symbol|none> <hex-color> "
+            "[--symbol-color <hex>] [--scale <val>] [--force]"
+        )
+
+    raw_folders = positional[:-2]
+    raw_symbol = positional[-2].lower()
+    raw_color = positional[-1]
+
+    target_folders: list[Path] = []
+    for raw_dir in raw_folders:
+        resolved = Path(raw_dir).expanduser().resolve()
+        if not resolved.is_dir():
+            die(f"Not a directory: {resolved}")
+        if resolved not in target_folders:
+            target_folders.append(resolved)
+
+    all_symbols, aliases = get_all_symbols()
+    symbol = validate_symbol(raw_symbol, all_symbols)
+    hex_color = validate_color(raw_color)
+
+    canon = canonical_symbol_name(symbol, aliases)
+    if symbol and canon and canon != symbol:
+        print(f"Resolved alias '{symbol}' -> '{canon}'")
+
+    ensure_dirs()
+    out_path = icon_path(
+        symbol=symbol,
+        hex_color=hex_color,
+        symbol_color=symbol_color,
+        scale_ratio=scale_ratio,
+        aliases=aliases,
+    )
+
+    if not out_path.exists():
+        print(f"Generating icon: {out_path}")
+        svg = build_folder_svg(
+            hex_color=hex_color,
+            symbol=symbol,
+            symbol_color=symbol_color,
+            all_symbols=all_symbols,
+            scale_ratio=scale_ratio,
+        )
+        write_icon(svg, out_path)
+    else:
+        print(f"Using cached icon: {out_path}")
+
+    approve_all = force
+    applied_count = 0
+
+    for folder_path in target_folders:
+        existing_content = get_existing_directory_contents(folder_path)
+        if existing_content is not None and not approve_all:
+            dot_dir = folder_path / ".directory"
+            print(f"\nWARNING: '{dot_dir}' already exists and will be modified.")
+            print("Existing contents:")
+            print(existing_content.rstrip())
+            choice = confirm_batch("Proceed?")
+            if choice == "a":
+                approve_all = True
+            elif choice != "y":
+                print(f"Skipped: {folder_path}")
+                continue
+
+        try:
+            written = apply_desktop_icon(folder_path, out_path.resolve())
+            print(f"Written: {written}")
+            applied_count += 1
+        except FolderIconError as exc:
+            die(str(exc))
+
+    if len(target_folders) > 1:
+        print(f"Done: styled {applied_count}/{len(target_folders)} folders.")
+
+
+def cmd_reset(args: list[str]) -> None:
+    positional: list[str] = []
+    force = False
+
+    for arg in args:
+        if arg in ("--force", "-f"):
+            force = True
+        elif arg.startswith("-"):
+            die(f"Unknown flag: {arg}")
+        else:
+            positional.append(arg)
+
+    if not positional:
+        die("Usage: folder-icon reset <folder-path>... [--force]")
+
+    target_folders: list[Path] = []
+    for raw_dir in positional:
+        resolved = Path(raw_dir).expanduser().resolve()
+        if not resolved.is_dir():
+            die(f"Not a directory: {resolved}")
+        if resolved not in target_folders:
+            target_folders.append(resolved)
+
+    approve_all = force
+    reset_count = 0
+
+    for folder_path in target_folders:
+        info = inspect_directory_icon(folder_path)
+        if not info["exists"] or not info["icon"]:
+            reset_desktop_icon(folder_path)
+            print(f"Already default: {folder_path}")
+            continue
+
+        if not approve_all:
+            dot_dir = folder_path / ".directory"
+            print(f"\nFolder: {folder_path}")
+            print(f"Current Icon: {info['icon']}")
+            choice = confirm_batch(f"Reset '{dot_dir}'?")
+            if choice == "a":
+                approve_all = True
+            elif choice != "y":
+                print(f"Skipped: {folder_path}")
+                continue
+
+        try:
+            res = reset_desktop_icon(folder_path)
+        except FolderIconError as exc:
+            die(str(exc))
+            return
+
+        status = res["status"]
+        dot_dir = res["dot_dir"]
+        if status == "deleted":
+            print(f"Removed: {dot_dir}")
+            reset_count += 1
+        elif status == "updated":
+            print(f"Cleared Icon= in: {dot_dir}")
+            reset_count += 1
+        else:
+            print(f"Already default: {folder_path}")
+
+    if len(target_folders) > 1:
+        print(f"Done: reset {reset_count}/{len(target_folders)} folders.")
+
+
+def cmd_info(args: list[str]) -> None:
+    if not args or any(a.startswith("-") for a in args):
+        die("Usage: folder-icon info <folder-path>...")
+
+    for idx, raw_dir in enumerate(args):
+        if idx > 0:
+            print()
+        folder_path = Path(raw_dir).expanduser().resolve()
+        if not folder_path.is_dir():
+            print(f"Folder : {folder_path}")
+            print("Status : Not a valid directory")
+            continue
+
+        info = inspect_directory_icon(folder_path)
+        print(f"Folder : {folder_path}")
+        if not info["exists"]:
+            print("Status : Default (no .directory file)")
+            continue
+        if not info["icon"]:
+            print("Status : .directory present (no Icon= entry)")
+            continue
+
+        source_tag = "Managed by folder-icon" if info["is_managed"] else "Custom external icon"
+        exists_tag = "" if info["icon_exists"] else " [missing file]"
+        print(f"Status : {source_tag}")
+        print(f"Icon   : {info['icon']}{exists_tag}")
+
+        meta = info["metadata"]
+        if meta:
+            if "symbol" in meta:
+                print(f"Symbol : {meta['symbol']}")
+            if "folder_color" in meta:
+                print(f"Color  : {meta['folder_color']}")
+            if "symbol_color" in meta:
+                print(f"Glyph  : {meta['symbol_color']}")
+            if "symbol_scale" in meta:
+                print(f"Scale  : {meta['symbol_scale']}")
+
+
+def cmd_gc(args: list[str]) -> None:
+    force = False
+    dry_run = False
+
+    for arg in args:
+        if arg in ("--force", "-f"):
+            force = True
+        elif arg == "--dry-run":
+            dry_run = True
+        elif arg.startswith("-"):
+            die(f"Unknown flag: {arg}")
+        else:
+            die(f"Unexpected argument: {arg}")
+
+    print(f"Scanning folder references and cache ({OUTPUT_DIR})...")
+    report = scan_cache_usage()
+    in_use = report["in_use"]
+    orphaned = report["orphaned"]
+    total = report["total_count"]
+    reclaimable = format_bytes(report["orphaned_bytes"])
+
+    print(f"Cached SVGs : {total} total ({len(in_use)} in use, {len(orphaned)} orphaned)")
+
+    if not orphaned:
+        print("Cache is clean. No orphaned SVGs found.")
+        return
+
+    print(f"\nOrphaned SVGs ({reclaimable}):")
+    for idx, item in enumerate(orphaned, start=1):
+        meta = item["metadata"]
+        detail_parts = []
+        if meta.get("symbol"):
+            detail_parts.append(f"symbol={meta['symbol']}")
+        if meta.get("folder_color"):
+            detail_parts.append(f"color={meta['folder_color']}")
+        detail_str = f" ({', '.join(detail_parts)})" if detail_parts else ""
+        print(f"  [{idx}] {item['name']} - {format_bytes(item['size'])}{detail_str}")
+
+    if dry_run:
+        print("\nDry run: no files deleted.")
+        return
+
+    to_delete: list[Path] = []
+    if force:
+        to_delete = [item["path"] for item in orphaned]
+    else:
+        try:
+            choice = input(
+                "\nDelete orphaned icons? [y(all) / s(select individually) / N]: "
+            ).strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            choice = "n"
+
+        if choice in ("y", "yes"):
+            to_delete = [item["path"] for item in orphaned]
+        elif choice in ("s", "select"):
+            for item in orphaned:
+                if confirm(f"  Delete {item['name']} ({format_bytes(item['size'])})?"):
+                    to_delete.append(item["path"])
+        else:
+            print("Aborted. No files deleted.")
+            return
+
+    if not to_delete:
+        print("No files selected for deletion.")
+        return
+
+    deleted = delete_cached_icons(to_delete)
+    print(f"Deleted {len(deleted)} orphaned SVG(s).")
+
+
+# ---------------------------------------------------------------------------
+# ENTRY POINT
+# ---------------------------------------------------------------------------
+
+USAGE = f"""folder-icon - Breeze-style custom folder icon generator
+
+Usage:
+  folder-icon list
+      List available symbols (Lucide official + aliases + custom drop-ins).
+
+  folder-icon make <symbol|none> <hex-color> [--out <dir>] [--symbol-color <hex>] [--scale <val>]
+      Generate a folder icon SVG.
+      Default output: ~/.local/share/folder-icons/<symbol>-<hex>[-<hash>].svg
+      Scale range: {MIN_SYMBOL_SCALE:.2f} to {MAX_SYMBOL_SCALE:.2f} (or 25% to 75%, default {SYMBOL_SCALE:.2f}).
+
+  folder-icon apply <folder-path>... <symbol|none> <hex-color> [--symbol-color <hex>] [--scale <val>] [--force]
+      Generate icon and apply to one or more folders via <folder>/.directory.
+
+  folder-icon reset <folder-path>... [--force]
+      Remove custom folder icon from one or more folders.
+
+  folder-icon info <folder-path>...
+      Inspect the current icon status and metadata of one or more folders.
+
+  folder-icon gc [--dry-run] [--force]
+      Sync tracked folders and clean up unreferenced SVGs in ~/.local/share/folder-icons.
+
+  folder-icon alias [<target> to <alias> | remove <alias>] [--force]
+      Create, list, or remove symbol aliases. Warns about conflicts.
+
+Custom symbols:
+  Drop any 24x24 SVG from https://lucide.dev into ~/.local/share/folder-icons/symbols/<name>.svg
+"""
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help"):
+        print(USAGE)
+        sys.exit(0)
+
+    command = args[0].lower()
+    rest = args[1:]
+
+    if command == "list":
+        cmd_list(rest)
+    elif command == "make":
+        cmd_make(rest)
+    elif command == "apply":
+        cmd_apply(rest)
+    elif command == "reset":
+        cmd_reset(rest)
+    elif command == "info":
+        cmd_info(rest)
+    elif command == "gc":
+        cmd_gc(rest)
+    elif command in ("alias", "aliases"):
+        cmd_alias(rest)
+    else:
+        die(f"Unknown command '{command}'. Run 'folder-icon --help' for usage.")
+
+
+if __name__ == "__main__":
+    main()

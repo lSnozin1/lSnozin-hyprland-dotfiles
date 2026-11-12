@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#191526" />
+      <stop offset="100%" stop-color="#0b0b10" />
+    </linearGradient>
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="50%" stop-color="#ff6996" />
+      <stop offset="100%" stop-color="#f4a6c0" />
+    </linearGradient>
+    <linearGradient id="tabGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#7e22ce" />
+    </linearGradient>
+    <linearGradient id="frontGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6996" />
+      <stop offset="100%" stop-color="#c026d3" />
+    </linearGradient>
+    <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff6996" stop-opacity="0.32" />
+      <stop offset="100%" stop-color="#ff6996" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- App squircle base -->
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="3" />
+
+  <!-- Subtle ambient glow -->
+  <circle cx="64" cy="66" r="42" fill="url(#glowGrad)" />
+
+  <!-- Folder back & tab -->
+  <path fill="url(#tabGrad)" d="M 28 45 C 28 41.5 30.5 39 34 39 L 51 39 C 53.2 39 55 40.1 56.3 41.9 L 60 47 L 94 47 C 97.5 47 100 49.5 100 53 L 100 83 C 100 86.5 97.5 89 94 89 L 34 89 C 30.5 89 28 86.5 28 83 Z" />
+
+  <!-- Folder front body -->
+  <path fill="url(#frontGrad)" d="M 28 54 C 28 51.2 30.2 49 33 49 L 95 49 C 97.8 49 100 51.2 100 54 L 100 83 C 100 86.5 97.5 89 94 89 L 34 89 C 30.5 89 28 86.5 28 83 Z" />
+
+  <!-- Top edge pastel highlight -->
+  <path fill="none" stroke="#f4a6c0" stroke-opacity="0.7" stroke-width="1.5" stroke-linecap="round" d="M 33 50.2 L 95 50.2" />
+
+  <!-- Styler sparkle emblem -->
+  <path fill="#ffffff" d="M 61 57 C 62.4 64.6 63.4 65.6 71 67 C 63.4 68.4 62.4 69.4 61 77 C 59.6 69.4 58.6 68.4 51 67 C 58.6 65.6 59.6 64.6 61 57 Z" />
+  <path fill="#f4a6c0" d="M 76.5 54 C 77.1 57.3 77.7 57.9 81 58.5 C 77.7 59.1 77.1 59.7 76.5 63 C 75.9 59.7 75.3 59.1 72 58.5 C 75.3 57.9 75.9 57.3 76.5 54 Z" />
+  <circle cx="49" cy="77.5" r="2.4" fill="#fce7f3" />
+</svg>

@@ -1,0 +1,2591 @@
+#!/usr/bin/env python3
+"""
+folder-icon-gui - PySide6 desktop interface for folder-icon.
+
+Usage:
+    folder-icon-gui [folder-path...]
+"""
+
+from pathlib import Path
+import sys
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+try:
+    from PySide6.QtCore import QByteArray, QSize, Qt, QThread, Signal
+    from PySide6.QtGui import QColor, QDragEnterEvent, QDropEvent, QIcon, QPainter, QPixmap
+    from PySide6.QtSvg import QSvgRenderer
+    from PySide6.QtSvgWidgets import QSvgWidget
+    from PySide6.QtWidgets import (
+        QAbstractItemView,
+        QApplication,
+        QButtonGroup,
+        QComboBox,
+        QColorDialog,
+        QFileDialog,
+        QFrame,
+        QHBoxLayout,
+        QHeaderView,
+        QInputDialog,
+        QLabel,
+        QLineEdit,
+        QListWidget,
+        QListWidgetItem,
+        QMainWindow,
+        QMessageBox,
+        QProgressBar,
+        QPushButton,
+        QSlider,
+        QSplitter,
+        QTableWidget,
+        QTableWidgetItem,
+        QTabWidget,
+        QVBoxLayout,
+        QWidget,
+    )
+except ImportError:
+    print(
+        "Error: PySide6 is required to run folder-icon-gui.\n"
+        "Install it on Arch/CachyOS with: sudo pacman -S python-pyside6",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+from folder_icon_core import (
+    LUCIDE_SYMBOLS,
+    MAX_SYMBOL_SCALE,
+    MIN_SYMBOL_SCALE,
+    OUTPUT_DIR,
+    REGISTRY_FILE,
+    ALIAS_FILE,
+    SYMBOL_CONTRAST_MODE,
+    SYMBOL_DIR,
+    SYMBOL_SCALE,
+    FolderIconError,
+    apply_desktop_icon,
+    build_folder_svg,
+    build_symbol_preview_svg,
+    canonical_symbol_name,
+    check_alias_plan,
+    contrast_color,
+    delete_cached_icons,
+    delete_custom_svg,
+    ensure_dirs,
+    fetch_lucide_icon_index,
+    fetch_lucide_icon_svg,
+    get_all_symbols,
+    get_existing_directory_contents,
+    icon_filename,
+    icon_path,
+    import_custom_svg,
+    inspect_directory_icon,
+    load_custom_symbols,
+    load_gui_state,
+    normalize_hex,
+    parse_hex,
+    remove_alias,
+    reset_desktop_icon,
+    save_custom_svg_content,
+    save_gui_state,
+    scan_cache_usage,
+    set_alias,
+    validate_and_extract_svg,
+    write_icon,
+)
+
+# ---------------------------------------------------------------------------
+# DARK THEME STYLESHEET (Black Base + Purple / Magenta Accents)
+# ---------------------------------------------------------------------------
+
+DARK_STYLESHEET = """
+QMainWindow, QDialog {
+    background-color: #0b0b0f;
+    color: #f4f4f6;
+    font-family: "Inter", "Noto Sans", sans-serif;
+    font-size: 13px;
+}
+
+QWidget {
+    background-color: transparent;
+    color: #f4f4f6;
+    font-family: "Inter", "Noto Sans", sans-serif;
+    font-size: 13px;
+}
+
+QWidget#CentralRoot {
+    background-color: #0b0b0f;
+}
+
+QLabel, QSvgWidget {
+    background-color: transparent;
+}
+
+QFrame#Card {
+    background-color: #121218;
+    border: 1px solid #232330;
+    border-radius: 10px;
+}
+
+QFrame#PreviewBox {
+    background-color: #0e0e14;
+    border: 1px solid #2a2438;
+    border-radius: 12px;
+}
+
+QFrame#SubBar {
+    background-color: #15151e;
+    border: 1px solid #262436;
+    border-radius: 8px;
+}
+
+QLabel#SectionTitle {
+    background-color: transparent;
+    color: #e9d5ff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+QLabel#MutedLabel {
+    background-color: transparent;
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+QLabel#BadgeLabel {
+    background-color: #1e162e;
+    color: #e879f9;
+    border: 1px solid #4c1d95;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+QLineEdit, QComboBox {
+    background-color: #16161e;
+    color: #f4f4f6;
+    border: 1px solid #2b2b3b;
+    border-radius: 6px;
+    padding: 6px 10px;
+    selection-background-color: #a855f7;
+}
+
+QLineEdit:focus, QComboBox:focus {
+    border: 1px solid #c084fc;
+}
+
+QLineEdit:disabled, QComboBox:disabled {
+    background-color: #111117;
+    color: #6b7280;
+    border-color: #1f1f2a;
+}
+
+QLineEdit#CompactHexInput {
+    padding: 2px 6px;
+    font-size: 11px;
+    border-radius: 5px;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 24px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #16161e;
+    color: #f4f4f6;
+    border: 1px solid #3b2d54;
+    selection-background-color: #7e22ce;
+}
+
+QPushButton {
+    background-color: #1b1b24;
+    color: #f4f4f6;
+    border: 1px solid #2f2f40;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background-color: #252233;
+    border-color: #a855f7;
+}
+
+QPushButton:pressed {
+    background-color: #171422;
+}
+
+QPushButton:disabled {
+    color: #525263;
+    border-color: #1e1e28;
+    background-color: #111116;
+}
+
+QPushButton#ToggleChip {
+    background-color: #171720;
+    color: #a1a1aa;
+    border: 1px solid #2b2b3a;
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QPushButton#ToggleChip:hover {
+    color: #f4f4f6;
+    border-color: #9333ea;
+}
+
+QPushButton#ToggleChip:checked {
+    background-color: #2b1842;
+    color: #f0abfc;
+    border: 1px solid #d946ef;
+}
+
+QPushButton#PrimaryButton {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #9333ea, stop: 1 #db2777
+    );
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+QPushButton#PrimaryButton:hover {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #a855f7, stop: 1 #ec4899
+    );
+}
+
+QPushButton#PrimaryButton:disabled {
+    background-color: #261b33;
+    color: #6b6478;
+}
+
+QPushButton#DangerButton:hover {
+    border-color: #f43f5e;
+    color: #fda4af;
+}
+
+QTabWidget::pane {
+    border: 1px solid #232330;
+    border-radius: 8px;
+    background-color: #121218;
+    top: -1px;
+}
+
+QTabBar::tab {
+    background-color: #14141c;
+    color: #9ca3af;
+    border: 1px solid #232330;
+    border-bottom: none;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    padding: 7px 14px;
+    margin-right: 4px;
+    font-weight: 600;
+}
+
+QTabBar::tab:selected {
+    background-color: #121218;
+    color: #f0abfc;
+    border-color: #6b21a8;
+}
+
+QTabBar::tab:hover:!selected {
+    color: #e4e4e7;
+}
+
+QListWidget {
+    background-color: #0e0e13;
+    border: 1px solid #22222e;
+    border-radius: 8px;
+    padding: 6px;
+    outline: none;
+}
+
+QListWidget::item {
+    background-color: #15151d;
+    border: 1px solid #232330;
+    border-radius: 8px;
+    padding: 6px;
+    margin: 3px;
+    color: #e4e4e7;
+}
+
+QListWidget::item:hover {
+    background-color: #1d192b;
+    border-color: #9333ea;
+}
+
+QListWidget::item:selected {
+    background-color: #29183d;
+    border: 1px solid #e879f9;
+    color: #ffffff;
+}
+
+QListWidget#FolderQueueList::item {
+    padding: 4px 8px;
+    margin: 2px 0px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+QListWidget#LucideBrowserList::item {
+    padding: 6px 10px;
+    margin: 2px 2px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+QTableWidget {
+    background-color: #0e0e13;
+    border: 1px solid #22222e;
+    border-radius: 8px;
+    gridline-color: #1e1e29;
+    selection-background-color: #29183d;
+    selection-color: #ffffff;
+    outline: none;
+}
+
+QHeaderView::section {
+    background-color: #16161f;
+    color: #d8b4fe;
+    border: none;
+    border-bottom: 1px solid #2a2a38;
+    padding: 6px 10px;
+    font-weight: 700;
+}
+
+QProgressBar {
+    background-color: #16161e;
+    border: 1px solid #2b2b3b;
+    border-radius: 5px;
+    height: 8px;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #9333ea, stop: 1 #ec4899
+    );
+    border-radius: 4px;
+}
+
+QSlider::groove:horizontal {
+    height: 6px;
+    background: #1f1f2b;
+    border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+    background: #d946ef;
+    width: 14px;
+    height: 14px;
+    margin: -4px 0;
+    border-radius: 7px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #9333ea;
+    border-radius: 3px;
+}
+"""
+
+PRESET_COLORS = [
+    "#ff6996",  # Rose Pink
+    "#f4a6c0",  # Pastel Pink
+    "#3daee9",  # Breeze Blue
+    "#a855f7",  # Vivid Purple
+    "#ec4899",  # Magenta Pink
+    "#22c55e",  # Emerald
+    "#f59e0b",  # Amber
+    "#ef4444",  # Crimson
+]
+
+PREVIEW_PRESETS: dict[str, str] = {
+    "dark": "#0e0e14",
+    "gray": "#52525b",
+    "light": "#f4f4f6",
+}
+
+ONLINE_PLACEHOLDER_SVG = (
+    '<?xml version="1.0" encoding="UTF-8"?>'
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+    '<circle cx="12" cy="12" r="9" fill="none" stroke="#6b7280" stroke-width="1.6"/>'
+    '<path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" '
+    'fill="none" stroke="#6b7280" stroke-width="1.4"/>'
+    '</svg>'
+)
+
+
+# ---------------------------------------------------------------------------
+# BACKGROUND WORKERS
+# ---------------------------------------------------------------------------
+
+class LucideIndexWorker(QThread):
+    """Fetch official Lucide icon names without blocking the UI thread."""
+
+    finished_ok = Signal(list)
+    failed = Signal(str)
+
+    def __init__(self, force_refresh: bool = False, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.force_refresh = force_refresh
+
+    def run(self) -> None:
+        try:
+            names = fetch_lucide_icon_index(force_refresh=self.force_refresh)
+            self.finished_ok.emit(names)
+        except Exception as exc:
+            self.failed.emit(str(exc))
+
+
+class LucideSvgWorker(QThread):
+    """Download and validate a single 24x24 Lucide SVG from GitHub."""
+
+    finished_ok = Signal(str, str)
+    failed = Signal(str, str)
+
+    def __init__(self, icon_name: str, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.icon_name = icon_name
+
+    def run(self) -> None:
+        try:
+            svg_text = fetch_lucide_icon_svg(self.icon_name)
+            self.finished_ok.emit(self.icon_name, svg_text)
+        except Exception as exc:
+            self.failed.emit(self.icon_name, str(exc))
+
+
+class CacheScanWorker(QThread):
+    """Scan folder registry and home directory for orphaned cache SVGs off the UI thread."""
+
+    finished_ok = Signal(dict)
+    failed = Signal(str)
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+
+    def run(self) -> None:
+        try:
+            report = scan_cache_usage()
+            self.finished_ok.emit(report)
+        except Exception as exc:
+            self.failed.emit(str(exc))
+
+
+# ---------------------------------------------------------------------------
+# HELPER FUNCTIONS
+# ---------------------------------------------------------------------------
+
+def render_svg_icon(svg_markup: str, size: int = 36) -> QIcon:
+    """Render SVG text into a crisp QIcon for list items."""
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    renderer = QSvgRenderer(QByteArray(svg_markup.encode("utf-8")))
+    if renderer.isValid():
+        painter = QPainter(pixmap)
+        renderer.render(painter)
+        painter.end()
+    return QIcon(pixmap)
+
+
+def render_svg_file_icon(svg_path: Path, size: int = 52) -> QIcon:
+    """Render an on-disk SVG file into a crisp QIcon."""
+    try:
+        return render_svg_icon(svg_path.read_text(encoding="utf-8"), size=size)
+    except Exception:
+        return QIcon()
+
+
+def format_bytes(num_bytes: int) -> str:
+    if num_bytes < 1024:
+        return f"{num_bytes} B"
+    return f"{num_bytes / 1024.0:.1f} KB"
+
+
+def summarize_folder_icon(dir_path: Path) -> str:
+    """Return a concise one-line summary of dir_path/.directory icon status."""
+    info = inspect_directory_icon(dir_path)
+    if not info["exists"] or not info["icon"]:
+        return "Default Breeze icon"
+
+    meta = info["metadata"]
+    if info["is_managed"] and meta:
+        sym = meta.get("symbol", "none")
+        col = meta.get("folder_color", "")
+        parts = [sym]
+        if col:
+            parts.append(col)
+        if not info["icon_exists"]:
+            parts.append("missing SVG")
+        return f"Styled: {', '.join(parts)}"
+
+    icon_name = Path(info["icon"]).name
+    missing = " [missing]" if (Path(info["icon"]).is_absolute() and not info["icon_exists"]) else ""
+    return f"Custom: {icon_name}{missing}"
+
+
+# ---------------------------------------------------------------------------
+# MAIN APPLICATION WINDOW
+# ---------------------------------------------------------------------------
+
+class FolderIconWindow(QMainWindow):
+    def __init__(self, initial_folders: list[Path] | None = None) -> None:
+        super().__init__()
+        self.setWindowTitle("folder-icon — Breeze Folder Styler")
+        icon_file = SCRIPT_DIR / "folder-icon-gui.svg"
+        if icon_file.is_file():
+            self.setWindowIcon(QIcon(str(icon_file)))
+        self.resize(1040, 680)
+        self.setMinimumSize(900, 580)
+        self.setAcceptDrops(True)
+
+        ensure_dirs()
+        self.state = load_gui_state()
+
+        self.all_symbols: dict[str, str] = {}
+        self.aliases: dict[str, str] = {}
+        self.custom_symbols: dict[str, str] = {}
+
+        self.selected_symbol: str | None = "gamepad"
+        self.folder_hex: str = (
+            self.state["recent_colors"][0]
+            if self.state.get("recent_colors")
+            else "#ff6996"
+        )
+        self.custom_symbol_hex: str = "#ffffff"
+        self.contrast_mode: str = SYMBOL_CONTRAST_MODE
+        self.scale_ratio: float = SYMBOL_SCALE
+
+        self.preview_bg_key: str = "dark"
+        self.custom_preview_bg_hex: str = "#1e1b2e"
+        self.multi_mode: bool = False
+
+        # Background workers
+        self._active_workers: set[QThread] = set()
+        self._cache_scanning: bool = False
+
+        # Live Lucide Browser state
+        self.lucide_index: list[str] = []
+        self.lucide_index_loaded: bool = False
+        self.lucide_svg_cache: dict[str, str] = {}
+        self.lucide_selected_name: str | None = None
+        self.lucide_preview_name: str | None = None
+        self.lucide_preview_inner: str | None = None
+        self._placeholder_icon = render_svg_icon(ONLINE_PLACEHOLDER_SVG, size=24)
+
+        valid_initial = [p for p in (initial_folders or []) if p.is_dir()]
+
+        self._build_ui()
+        self.reload_catalog(preserve_selection=True)
+
+        if len(valid_initial) > 1:
+            self.multi_toggle_btn.setChecked(True)
+            self._add_multi_folders(valid_initial)
+        elif len(valid_initial) == 1:
+            self.folder_input.setText(str(valid_initial[0]))
+
+        self._refresh_target_status()
+        self._update_save_svg_tooltip()
+        self.update_preview()
+
+    # -----------------------------------------------------------------------
+    # UI CONSTRUCTION
+    # -----------------------------------------------------------------------
+
+    def _build_ui(self) -> None:
+        central = QWidget()
+        central.setObjectName("CentralRoot")
+        self.setCentralWidget(central)
+        root_layout = QVBoxLayout(central)
+        root_layout.setContentsMargins(14, 14, 14, 12)
+        root_layout.setSpacing(10)
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setHandleWidth(8)
+        root_layout.addWidget(splitter, stretch=1)
+
+        # === LEFT PANEL: Live Preview & Controls ===
+        left_card = QFrame()
+        left_card.setObjectName("Card")
+        left_card.setMinimumWidth(365)
+        left_card.setMaximumWidth(440)
+        left_layout = QVBoxLayout(left_card)
+        left_layout.setContentsMargins(16, 14, 16, 14)
+        left_layout.setSpacing(10)
+
+        # Preview Container + Background Toggle & Custom Hex
+        self.preview_box = QFrame()
+        self.preview_box.setObjectName("PreviewBox")
+        preview_layout = QVBoxLayout(self.preview_box)
+        preview_layout.setContentsMargins(10, 8, 10, 10)
+        preview_layout.setSpacing(4)
+
+        bg_bar = QHBoxLayout()
+        bg_bar.setSpacing(4)
+        bg_bar.addStretch(1)
+        self.bg_btn_group = QButtonGroup(self)
+        self.bg_btn_group.setExclusive(True)
+        self.bg_chips: dict[str, QPushButton] = {}
+        for key, label in (("dark", "Dark"), ("gray", "Gray"), ("light", "Light"), ("custom", "Custom")):
+            chip = QPushButton(label)
+            chip.setObjectName("ToggleChip")
+            chip.setCheckable(True)
+            chip.setChecked(key == self.preview_bg_key)
+            chip.clicked.connect(lambda _checked=False, k=key: self._set_preview_background(k))
+            self.bg_btn_group.addButton(chip)
+            self.bg_chips[key] = chip
+            bg_bar.addWidget(chip)
+
+        self.preview_bg_input = QLineEdit(self.custom_preview_bg_hex)
+        self.preview_bg_input.setObjectName("CompactHexInput")
+        self.preview_bg_input.setMaxLength(7)
+        self.preview_bg_input.setFixedWidth(70)
+        self.preview_bg_input.setPlaceholderText("#1e1b2e")
+        self.preview_bg_input.setToolTip("Custom preview background hex color")
+        self.preview_bg_input.textChanged.connect(self._on_preview_bg_hex_changed)
+
+        self.preview_bg_pick_btn = QPushButton("...")
+        self.preview_bg_pick_btn.setObjectName("ToggleChip")
+        self.preview_bg_pick_btn.setFixedWidth(26)
+        self.preview_bg_pick_btn.setToolTip("Pick custom preview background color")
+        self.preview_bg_pick_btn.clicked.connect(self._pick_preview_bg_color)
+
+        bg_bar.addWidget(self.preview_bg_input)
+        bg_bar.addWidget(self.preview_bg_pick_btn)
+        preview_layout.addLayout(bg_bar)
+
+        self.preview_svg = QSvgWidget()
+        self.preview_svg.setFixedSize(152, 152)
+        self.preview_svg.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.preview_svg.setStyleSheet("background-color: transparent;")
+        preview_layout.addWidget(self.preview_svg, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        badge_row = QHBoxLayout()
+        badge_row.setSpacing(8)
+        badge_row.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.symbol_badge = QLabel("symbol: gamepad")
+        self.symbol_badge.setObjectName("BadgeLabel")
+        self.contrast_readout = QLabel("glyph: #ffffff")
+        self.contrast_readout.setObjectName("MutedLabel")
+        badge_row.addWidget(self.symbol_badge)
+        badge_row.addWidget(self.contrast_readout)
+        preview_layout.addLayout(badge_row)
+
+        left_layout.addWidget(self.preview_box)
+
+        # Folder Color Section
+        color_title = QLabel("FOLDER COLOR")
+        color_title.setObjectName("SectionTitle")
+        left_layout.addWidget(color_title)
+
+        color_row = QHBoxLayout()
+        color_row.setSpacing(8)
+        self.color_swatch_btn = QPushButton()
+        self.color_swatch_btn.setFixedSize(36, 32)
+        self.color_swatch_btn.setToolTip("Open color picker")
+        self.color_swatch_btn.clicked.connect(self._pick_folder_color)
+
+        self.hex_input = QLineEdit(self.folder_hex)
+        self.hex_input.setMaxLength(7)
+        self.hex_input.setPlaceholderText("#ff6996")
+        self.hex_input.textChanged.connect(self._on_hex_text_changed)
+
+        pick_btn = QPushButton("Pick...")
+        pick_btn.clicked.connect(self._pick_folder_color)
+
+        color_row.addWidget(self.color_swatch_btn)
+        color_row.addWidget(self.hex_input, stretch=1)
+        color_row.addWidget(pick_btn)
+        left_layout.addLayout(color_row)
+
+        # Swatch Bar (Recent + Presets)
+        self.swatch_row = QHBoxLayout()
+        self.swatch_row.setSpacing(6)
+        left_layout.addLayout(self.swatch_row)
+        self._rebuild_swatches()
+
+        # Symbol Appearance Section + Reset Button
+        glyph_header_row = QHBoxLayout()
+        glyph_title = QLabel("SYMBOL STYLE")
+        glyph_title.setObjectName("SectionTitle")
+
+        self.reset_style_btn = QPushButton("Reset")
+        self.reset_style_btn.setObjectName("ToggleChip")
+        self.reset_style_btn.setToolTip(
+            f"Reset symbol contrast and scale to CLI defaults ({SYMBOL_CONTRAST_MODE}, {int(round(SYMBOL_SCALE * 100))}%)"
+        )
+        self.reset_style_btn.clicked.connect(self._reset_symbol_style)
+
+        glyph_header_row.addWidget(glyph_title)
+        glyph_header_row.addStretch(1)
+        glyph_header_row.addWidget(self.reset_style_btn)
+        left_layout.addLayout(glyph_header_row)
+
+        contrast_row = QHBoxLayout()
+        contrast_row.setSpacing(8)
+        self.contrast_combo = QComboBox()
+        self.contrast_combo.addItems(["Auto Contrast", "White Glyph", "Black Glyph", "Custom Hex"])
+        self.contrast_combo.currentIndexChanged.connect(self._on_contrast_mode_changed)
+
+        self.sym_hex_input = QLineEdit(self.custom_symbol_hex)
+        self.sym_hex_input.setMaxLength(7)
+        self.sym_hex_input.setPlaceholderText("#ffffff")
+        self.sym_hex_input.setEnabled(False)
+        self.sym_hex_input.textChanged.connect(self._on_sym_hex_changed)
+
+        self.sym_pick_btn = QPushButton("...")
+        self.sym_pick_btn.setFixedWidth(34)
+        self.sym_pick_btn.setEnabled(False)
+        self.sym_pick_btn.clicked.connect(self._pick_symbol_color)
+
+        contrast_row.addWidget(self.contrast_combo, stretch=1)
+        contrast_row.addWidget(self.sym_hex_input)
+        contrast_row.addWidget(self.sym_pick_btn)
+        left_layout.addLayout(contrast_row)
+
+        scale_row = QHBoxLayout()
+        scale_row.setSpacing(8)
+        scale_lbl = QLabel("Scale:")
+        scale_lbl.setObjectName("MutedLabel")
+        self.scale_slider = QSlider(Qt.Orientation.Horizontal)
+        self.scale_slider.setRange(
+            int(round(MIN_SYMBOL_SCALE * 100)),
+            int(round(MAX_SYMBOL_SCALE * 100)),
+        )
+        self.scale_slider.setValue(int(round(self.scale_ratio * 100)))
+        self.scale_slider.valueChanged.connect(self._on_scale_changed)
+        self.scale_val_lbl = QLabel(f"{int(round(self.scale_ratio * 100))}%")
+        self.scale_val_lbl.setObjectName("MutedLabel")
+        self.scale_val_lbl.setFixedWidth(34)
+        scale_row.addWidget(scale_lbl)
+        scale_row.addWidget(self.scale_slider, stretch=1)
+        scale_row.addWidget(self.scale_val_lbl)
+        left_layout.addLayout(scale_row)
+
+        # Target Folder Section + Single/Multi Toggle
+        target_header_row = QHBoxLayout()
+        target_title = QLabel("TARGET FOLDER")
+        target_title.setObjectName("SectionTitle")
+
+        self.multi_toggle_btn = QPushButton("Multi")
+        self.multi_toggle_btn.setObjectName("ToggleChip")
+        self.multi_toggle_btn.setCheckable(True)
+        self.multi_toggle_btn.setToolTip("Switch between single folder and multi-folder batch queue")
+        self.multi_toggle_btn.toggled.connect(self._on_multi_mode_toggled)
+
+        target_header_row.addWidget(target_title)
+        target_header_row.addStretch(1)
+        target_header_row.addWidget(self.multi_toggle_btn)
+        left_layout.addLayout(target_header_row)
+
+        # Single Folder Container
+        self.single_target_widget = QWidget()
+        single_layout = QVBoxLayout(self.single_target_widget)
+        single_layout.setContentsMargins(0, 0, 0, 0)
+        single_layout.setSpacing(4)
+
+        folder_row = QHBoxLayout()
+        folder_row.setSpacing(8)
+        self.folder_input = QLineEdit("")
+        self.folder_input.setPlaceholderText("/path/to/folder")
+        self.folder_input.textChanged.connect(self._refresh_target_status)
+        browse_btn = QPushButton("Browse...")
+        browse_btn.clicked.connect(self._browse_folder)
+        folder_row.addWidget(self.folder_input, stretch=1)
+        folder_row.addWidget(browse_btn)
+        single_layout.addLayout(folder_row)
+
+        self.folder_status_label = QLabel("No folder selected")
+        self.folder_status_label.setObjectName("MutedLabel")
+        single_layout.addWidget(self.folder_status_label)
+
+        left_layout.addWidget(self.single_target_widget)
+
+        # Multi-Folder Queue Container
+        self.multi_target_widget = QWidget()
+        multi_layout = QVBoxLayout(self.multi_target_widget)
+        multi_layout.setContentsMargins(0, 0, 0, 0)
+        multi_layout.setSpacing(6)
+
+        self.multi_folder_list = QListWidget()
+        self.multi_folder_list.setObjectName("FolderQueueList")
+        self.multi_folder_list.setFixedHeight(88)
+        self.multi_folder_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.multi_folder_list.itemSelectionChanged.connect(self._sync_multi_buttons)
+        multi_layout.addWidget(self.multi_folder_list)
+
+        multi_btn_row = QHBoxLayout()
+        multi_btn_row.setSpacing(6)
+        add_folder_btn = QPushButton("+ Add...")
+        add_folder_btn.clicked.connect(self._on_add_multi_folder_clicked)
+
+        self.remove_folder_btn = QPushButton("Remove")
+        self.remove_folder_btn.setEnabled(False)
+        self.remove_folder_btn.clicked.connect(self._on_remove_multi_folders_clicked)
+
+        self.clear_folders_btn = QPushButton("Clear")
+        self.clear_folders_btn.setEnabled(False)
+        self.clear_folders_btn.clicked.connect(self._on_clear_multi_folders_clicked)
+
+        multi_btn_row.addWidget(add_folder_btn)
+        multi_btn_row.addWidget(self.remove_folder_btn)
+        multi_btn_row.addWidget(self.clear_folders_btn)
+        multi_btn_row.addStretch(1)
+        multi_layout.addLayout(multi_btn_row)
+
+        self.multi_target_widget.setVisible(False)
+        left_layout.addWidget(self.multi_target_widget)
+
+        left_layout.addStretch(1)
+
+        # Action Buttons (Apply + Revert / Save SVG)
+        self.apply_btn = QPushButton("Apply to Folder")
+        self.apply_btn.setObjectName("PrimaryButton")
+        self.apply_btn.clicked.connect(self._on_apply_clicked)
+        left_layout.addWidget(self.apply_btn)
+
+        secondary_row = QHBoxLayout()
+        secondary_row.setSpacing(8)
+        self.revert_btn = QPushButton("Revert Folder")
+        self.revert_btn.setObjectName("DangerButton")
+        self.revert_btn.setToolTip("Remove custom .directory icon and restore default Breeze folder")
+        self.revert_btn.clicked.connect(self._on_revert_clicked)
+
+        self.save_svg_btn = QPushButton("Save SVG")
+        self.save_svg_btn.clicked.connect(self._on_save_svg_clicked)
+
+        secondary_row.addWidget(self.revert_btn, stretch=1)
+        secondary_row.addWidget(self.save_svg_btn, stretch=1)
+        left_layout.addLayout(secondary_row)
+
+        splitter.addWidget(left_card)
+
+        # === RIGHT PANEL: Symbols, Browse Lucide, Aliases, Cache Cleanup & Options ===
+        self.tabs = QTabWidget()
+        self.tabs.addTab(self._build_symbols_tab(), "Symbols")
+        self.lucide_tab_index = self.tabs.addTab(self._build_lucide_browser_tab(), "Browse Lucide")
+        self.tabs.addTab(self._build_aliases_tab(), "Aliases")
+        self.gc_tab_index = self.tabs.addTab(self._build_cache_cleanup_tab(), "Cache Cleanup")
+        self.options_tab_index = self.tabs.addTab(self._build_options_tab(), "Options")
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+
+        splitter.addWidget(self.tabs)
+        splitter.setStretchFactor(1, 1)
+
+        # Footer status bar
+        self.status_label = QLabel(
+            f"Ready  |  Save path: {self._get_svg_save_dir()}  |  Drop folders or 24x24 Lucide SVGs anywhere"
+        )
+        self.status_label.setObjectName("MutedLabel")
+        root_layout.addWidget(self.status_label)
+
+        self._update_swatch_button_style()
+        self._apply_preview_background_style()
+
+    def _build_symbols_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+
+        top_bar = QHBoxLayout()
+        top_bar.setSpacing(8)
+
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Search symbols or aliases (e.g. gamepad, pad, code)...")
+        self.search_input.setClearButtonEnabled(True)
+        self.search_input.textChanged.connect(self._populate_symbol_grid)
+
+        self.filter_combo = QComboBox()
+        self.filter_combo.addItems(["All Symbols", "Built-in Only", "Custom Only"])
+        self.filter_combo.currentIndexChanged.connect(self._populate_symbol_grid)
+
+        import_btn = QPushButton("+ Import SVG...")
+        import_btn.setToolTip(f"Import a 24x24 Lucide SVG into {SYMBOL_DIR}")
+        import_btn.clicked.connect(self._on_import_svg_clicked)
+
+        self.delete_custom_btn = QPushButton("Delete Custom")
+        self.delete_custom_btn.setObjectName("DangerButton")
+        self.delete_custom_btn.setEnabled(False)
+        self.delete_custom_btn.clicked.connect(self._on_delete_custom_clicked)
+
+        top_bar.addWidget(self.search_input, stretch=1)
+        top_bar.addWidget(self.filter_combo)
+        top_bar.addWidget(import_btn)
+        top_bar.addWidget(self.delete_custom_btn)
+        layout.addLayout(top_bar)
+
+        self.symbol_list = QListWidget()
+        self.symbol_list.setViewMode(QListWidget.ViewMode.IconMode)
+        self.symbol_list.setIconSize(QSize(34, 34))
+        self.symbol_list.setGridSize(QSize(112, 86))
+        self.symbol_list.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.symbol_list.setMovement(QListWidget.Movement.Static)
+        self.symbol_list.setWordWrap(True)
+        self.symbol_list.currentItemChanged.connect(self._on_symbol_selected)
+        layout.addWidget(self.symbol_list, stretch=1)
+
+        return tab
+
+    def _build_lucide_browser_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+
+        top_bar = QHBoxLayout()
+        top_bar.setSpacing(8)
+
+        self.lucide_search_input = QLineEdit()
+        self.lucide_search_input.setPlaceholderText("Search official Lucide icons (e.g. rocket, cat, folder-git)...")
+        self.lucide_search_input.setClearButtonEnabled(True)
+        self.lucide_search_input.textChanged.connect(self._populate_lucide_list)
+
+        self.lucide_filter_combo = QComboBox()
+        self.lucide_filter_combo.addItems(["All Lucide Icons", "Not Installed Yet", "Already Installed"])
+        self.lucide_filter_combo.currentIndexChanged.connect(self._populate_lucide_list)
+
+        self.lucide_refresh_btn = QPushButton("Refresh Index")
+        self.lucide_refresh_btn.setToolTip("Fetch latest official icon list from lucide-icons/lucide on GitHub")
+        self.lucide_refresh_btn.clicked.connect(lambda: self._load_lucide_index(force_refresh=True))
+
+        top_bar.addWidget(self.lucide_search_input, stretch=1)
+        top_bar.addWidget(self.lucide_filter_combo)
+        top_bar.addWidget(self.lucide_refresh_btn)
+        layout.addLayout(top_bar)
+
+        self.lucide_count_label = QLabel("Open this tab to load the official Lucide icon index.")
+        self.lucide_count_label.setObjectName("MutedLabel")
+        layout.addWidget(self.lucide_count_label)
+
+        self.lucide_result_list = QListWidget()
+        self.lucide_result_list.setObjectName("LucideBrowserList")
+        self.lucide_result_list.setIconSize(QSize(22, 22))
+        self.lucide_result_list.currentItemChanged.connect(self._on_lucide_item_selected)
+        layout.addWidget(self.lucide_result_list, stretch=1)
+
+        # Bottom Live Preview & Import Bar
+        import_bar = QFrame()
+        import_bar.setObjectName("SubBar")
+        bar_layout = QHBoxLayout(import_bar)
+        bar_layout.setContentsMargins(12, 8, 12, 8)
+        bar_layout.setSpacing(10)
+
+        self.lucide_glyph_preview = QSvgWidget()
+        self.lucide_glyph_preview.setFixedSize(32, 32)
+        self.lucide_glyph_preview.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.lucide_glyph_preview.setStyleSheet("background-color: transparent;")
+        self.lucide_glyph_preview.load(QByteArray(ONLINE_PLACEHOLDER_SVG.encode("utf-8")))
+
+        info_col = QVBoxLayout()
+        info_col.setSpacing(2)
+        self.lucide_selected_label = QLabel("Select an icon above to preview it live on your folder")
+        self.lucide_selected_label.setStyleSheet("background-color: transparent; font-weight: 600; color: #f4f4f6;")
+        self.lucide_detail_label = QLabel("Previews are temporary until imported to custom symbols.")
+        self.lucide_detail_label.setObjectName("MutedLabel")
+        info_col.addWidget(self.lucide_selected_label)
+        info_col.addWidget(self.lucide_detail_label)
+
+        self.lucide_import_as_btn = QPushButton("Import As...")
+        self.lucide_import_as_btn.setEnabled(False)
+        self.lucide_import_as_btn.setToolTip("Save this icon into custom symbols under a chosen name")
+        self.lucide_import_as_btn.clicked.connect(lambda: self._on_import_lucide_clicked(ask_name=True))
+
+        self.lucide_import_btn = QPushButton("Import Symbol")
+        self.lucide_import_btn.setObjectName("PrimaryButton")
+        self.lucide_import_btn.setEnabled(False)
+        self.lucide_import_btn.clicked.connect(lambda: self._on_import_lucide_clicked(ask_name=False))
+
+        bar_layout.addWidget(self.lucide_glyph_preview)
+        bar_layout.addLayout(info_col, stretch=1)
+        bar_layout.addWidget(self.lucide_import_as_btn)
+        bar_layout.addWidget(self.lucide_import_btn)
+        layout.addWidget(import_bar)
+
+        return tab
+
+    def _build_aliases_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+
+        hint = QLabel(
+            "Create shortcut names for any built-in or custom symbol (e.g. gamepad -> pad). "
+            "Conflicts with existing symbols or aliases will prompt before saving."
+        )
+        hint.setObjectName("MutedLabel")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        form_row = QHBoxLayout()
+        form_row.setSpacing(8)
+
+        self.alias_target_combo = QComboBox()
+        self.alias_target_combo.setEditable(True)
+        self.alias_target_combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.alias_target_combo.lineEdit().setPlaceholderText("Target symbol (e.g. gamepad)")
+
+        arrow_lbl = QLabel("to")
+        arrow_lbl.setObjectName("MutedLabel")
+
+        self.alias_name_input = QLineEdit()
+        self.alias_name_input.setPlaceholderText("New alias (e.g. pad)")
+        self.alias_name_input.returnPressed.connect(self._on_create_alias_clicked)
+
+        add_alias_btn = QPushButton("Create Alias")
+        add_alias_btn.setObjectName("PrimaryButton")
+        add_alias_btn.clicked.connect(self._on_create_alias_clicked)
+
+        form_row.addWidget(self.alias_target_combo, stretch=1)
+        form_row.addWidget(arrow_lbl)
+        form_row.addWidget(self.alias_name_input, stretch=1)
+        form_row.addWidget(add_alias_btn)
+        layout.addLayout(form_row)
+
+        self.alias_table = QTableWidget(0, 3)
+        self.alias_table.setHorizontalHeaderLabels(["Alias", "Target Symbol", "Status"])
+        self.alias_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.alias_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.alias_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.alias_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.alias_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.alias_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.alias_table.verticalHeader().setVisible(False)
+        self.alias_table.itemDoubleClicked.connect(self._on_alias_double_clicked)
+        layout.addWidget(self.alias_table, stretch=1)
+
+        bottom_row = QHBoxLayout()
+        bottom_row.addStretch(1)
+        remove_alias_btn = QPushButton("Remove Selected Alias")
+        remove_alias_btn.setObjectName("DangerButton")
+        remove_alias_btn.clicked.connect(self._on_remove_alias_clicked)
+        bottom_row.addWidget(remove_alias_btn)
+        layout.addLayout(bottom_row)
+
+        return tab
+
+    def _build_cache_cleanup_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+
+        header_row = QHBoxLayout()
+        header_row.setSpacing(8)
+
+        title = QLabel("ORPHANED CACHED ICONS")
+        title.setObjectName("SectionTitle")
+
+        self.gc_summary_label = QLabel("Open this tab to scan cached SVGs.")
+        self.gc_summary_label.setObjectName("MutedLabel")
+
+        self.gc_rescan_btn = QPushButton("Rescan")
+        self.gc_rescan_btn.clicked.connect(self._start_cache_scan)
+
+        header_row.addWidget(title)
+        header_row.addSpacing(6)
+        header_row.addWidget(self.gc_summary_label, stretch=1)
+        header_row.addWidget(self.gc_rescan_btn)
+        layout.addLayout(header_row)
+
+        hint = QLabel(
+            f"Syncs tracked folders and scans home directories against {OUTPUT_DIR}. "
+            "Checked SVGs are not referenced by any .directory file."
+        )
+        hint.setObjectName("MutedLabel")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        # Visual Loading Indicator
+        self.gc_loading_bar = QFrame()
+        self.gc_loading_bar.setObjectName("SubBar")
+        loading_layout = QVBoxLayout(self.gc_loading_bar)
+        loading_layout.setContentsMargins(12, 8, 12, 8)
+        loading_layout.setSpacing(6)
+
+        self.gc_loading_label = QLabel("Scanning folder registry and home directories...")
+        self.gc_loading_label.setStyleSheet("background-color: transparent; color: #e9d5ff; font-weight: 600;")
+
+        self.gc_progress = QProgressBar()
+        self.gc_progress.setRange(0, 0)
+        self.gc_progress.setTextVisible(False)
+
+        loading_layout.addWidget(self.gc_loading_label)
+        loading_layout.addWidget(self.gc_progress)
+        self.gc_loading_bar.setVisible(False)
+        layout.addWidget(self.gc_loading_bar)
+
+        self.orphan_list = QListWidget()
+        self.orphan_list.setViewMode(QListWidget.ViewMode.IconMode)
+        self.orphan_list.setIconSize(QSize(52, 52))
+        self.orphan_list.setGridSize(QSize(148, 108))
+        self.orphan_list.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.orphan_list.setMovement(QListWidget.Movement.Static)
+        self.orphan_list.setWordWrap(True)
+        self.orphan_list.itemChanged.connect(self._update_gc_selected_count)
+        self.orphan_list.itemDoubleClicked.connect(self._toggle_gc_item_check)
+        layout.addWidget(self.orphan_list, stretch=1)
+
+        footer = QHBoxLayout()
+        footer.setSpacing(8)
+
+        self.gc_select_all_btn = QPushButton("Select All")
+        self.gc_select_all_btn.setEnabled(False)
+        self.gc_select_all_btn.clicked.connect(lambda: self._set_all_gc_checked(True))
+
+        self.gc_unselect_all_btn = QPushButton("Unselect All")
+        self.gc_unselect_all_btn.setEnabled(False)
+        self.gc_unselect_all_btn.clicked.connect(lambda: self._set_all_gc_checked(False))
+
+        self.gc_delete_btn = QPushButton("Delete Selected (0)")
+        self.gc_delete_btn.setObjectName("DangerButton")
+        self.gc_delete_btn.setEnabled(False)
+        self.gc_delete_btn.clicked.connect(self._on_delete_selected_orphans)
+
+        footer.addWidget(self.gc_select_all_btn)
+        footer.addWidget(self.gc_unselect_all_btn)
+        footer.addStretch(1)
+        footer.addWidget(self.gc_delete_btn)
+        layout.addLayout(footer)
+
+        return tab
+
+    def _build_options_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(14, 14, 14, 14)
+        layout.setSpacing(14)
+
+        save_title = QLabel("SVG SAVE PATH")
+        save_title.setObjectName("SectionTitle")
+        layout.addWidget(save_title)
+
+        save_desc = QLabel(
+            "Destination folder used when clicking the 'Save SVG' button on the left panel. "
+            "Files are saved directly here using the canonical <symbol>-<hex> naming pattern."
+        )
+        save_desc.setObjectName("MutedLabel")
+        save_desc.setWordWrap(True)
+        layout.addWidget(save_desc)
+
+        path_row = QHBoxLayout()
+        path_row.setSpacing(8)
+
+        self.options_save_dir_input = QLineEdit(str(self._get_svg_save_dir()))
+        self.options_save_dir_input.setPlaceholderText(str(OUTPUT_DIR))
+        self.options_save_dir_input.textChanged.connect(self._on_options_save_dir_changed)
+
+        browse_save_btn = QPushButton("Browse...")
+        browse_save_btn.clicked.connect(self._on_browse_svg_save_dir)
+
+        reset_save_btn = QPushButton("Reset Default")
+        reset_save_btn.setToolTip(f"Reset to {OUTPUT_DIR}")
+        reset_save_btn.clicked.connect(self._on_reset_svg_save_dir)
+
+        path_row.addWidget(self.options_save_dir_input, stretch=1)
+        path_row.addWidget(browse_save_btn)
+        path_row.addWidget(reset_save_btn)
+        layout.addLayout(path_row)
+
+        self.options_save_status = QLabel("")
+        self.options_save_status.setObjectName("MutedLabel")
+        layout.addWidget(self.options_save_status)
+
+        # Storage Paths Info Card
+        paths_card = QFrame()
+        paths_card.setObjectName("SubBar")
+        paths_layout = QVBoxLayout(paths_card)
+        paths_layout.setContentsMargins(12, 10, 12, 10)
+        paths_layout.setSpacing(6)
+
+        info_header = QLabel("MANAGED DATA LOCATIONS")
+        info_header.setObjectName("SectionTitle")
+        paths_layout.addWidget(info_header)
+
+        for label_text, path_val in (
+            ("Icon Cache:", OUTPUT_DIR),
+            ("Custom Symbols:", SYMBOL_DIR),
+            ("Aliases File:", ALIAS_FILE),
+            ("Folder Registry:", REGISTRY_FILE),
+        ):
+            row = QHBoxLayout()
+            row.setSpacing(8)
+            k_lbl = QLabel(label_text)
+            k_lbl.setObjectName("MutedLabel")
+            k_lbl.setFixedWidth(120)
+            v_lbl = QLabel(str(path_val))
+            v_lbl.setStyleSheet("background-color: transparent; color: #e4e4e7; font-size: 12px;")
+            v_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            row.addWidget(k_lbl)
+            row.addWidget(v_lbl, stretch=1)
+            paths_layout.addLayout(row)
+
+        layout.addWidget(paths_card)
+        layout.addStretch(1)
+
+        self._refresh_options_status()
+        return tab
+
+    # -----------------------------------------------------------------------
+    # OPTIONS & SAVE PATH HELPERS
+    # -----------------------------------------------------------------------
+
+    def _get_svg_save_dir(self) -> Path:
+        raw = str(self.state.get("svg_save_dir", "")).strip()
+        return Path(raw).expanduser() if raw else OUTPUT_DIR
+
+    def _refresh_options_status(self) -> None:
+        target_dir = self._get_svg_save_dir()
+        if target_dir.exists() and not target_dir.is_dir():
+            self.options_save_status.setText("Warning: Path points to a file, not a directory.")
+            self.options_save_status.setStyleSheet("background-color: transparent; color: #fb7185; font-size: 12px;")
+        elif target_dir.is_dir():
+            self.options_save_status.setText(f"Active save folder: {target_dir}")
+            self.options_save_status.setStyleSheet("background-color: transparent; color: #c084fc; font-size: 12px;")
+        else:
+            self.options_save_status.setText(f"Folder will be created automatically on save: {target_dir}")
+            self.options_save_status.setStyleSheet("background-color: transparent; color: #9ca3af; font-size: 12px;")
+
+    def _update_save_svg_tooltip(self) -> None:
+        self.save_svg_btn.setToolTip(f"Save SVG directly to {self._get_svg_save_dir()}")
+
+    def _on_options_save_dir_changed(self, text: str) -> None:
+        cleaned = text.strip()
+        self.state["svg_save_dir"] = cleaned if cleaned else str(OUTPUT_DIR)
+        save_gui_state(self.state)
+        self._refresh_options_status()
+        self._update_save_svg_tooltip()
+
+    def _on_browse_svg_save_dir(self) -> None:
+        current = self._get_svg_save_dir()
+        start = str(current if current.is_dir() else Path.home())
+        chosen = QFileDialog.getExistingDirectory(self, "Choose SVG Save Folder", start)
+        if chosen:
+            self.options_save_dir_input.setText(chosen)
+
+    def _on_reset_svg_save_dir(self) -> None:
+        self.options_save_dir_input.setText(str(OUTPUT_DIR))
+        self.status_label.setText(f"SVG save path reset to {OUTPUT_DIR}")
+
+    # -----------------------------------------------------------------------
+    # CATALOG & ALIAS REFRESH
+    # -----------------------------------------------------------------------
+
+    def reload_catalog(self, preserve_selection: bool = True) -> None:
+        current = self.selected_symbol if preserve_selection else None
+        self.all_symbols, self.aliases = get_all_symbols()
+        custom_loaded = load_custom_symbols()
+        assert isinstance(custom_loaded, dict)
+        self.custom_symbols = custom_loaded
+
+        base_names = sorted(set(LUCIDE_SYMBOLS.keys()) | set(self.custom_symbols.keys()))
+        prev_target = self.alias_target_combo.currentText()
+        self.alias_target_combo.clear()
+        self.alias_target_combo.addItems(base_names)
+        if prev_target in base_names:
+            self.alias_target_combo.setCurrentText(prev_target)
+        elif self.selected_symbol in base_names:
+            self.alias_target_combo.setCurrentText(self.selected_symbol)
+
+        self._populate_symbol_grid(restore_symbol=current)
+        self._populate_alias_table()
+        if self.lucide_index_loaded:
+            self._populate_lucide_list()
+
+    def _populate_symbol_grid(self, _text: str = "", restore_symbol: str | None = None) -> None:
+        target_restore = restore_symbol if restore_symbol is not None else self.selected_symbol
+        query = self.search_input.text().strip().lower()
+        mode = self.filter_combo.currentIndex()  # 0 = All, 1 = Built-in, 2 = Custom
+
+        reverse_aliases: dict[str, list[str]] = {}
+        for alias_name, target in sorted(self.aliases.items()):
+            reverse_aliases.setdefault(target, []).append(alias_name)
+
+        self.symbol_list.blockSignals(True)
+        self.symbol_list.clear()
+
+        if mode == 0 and (not query or query in "none plain empty"):
+            none_svg = (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+                '<circle cx="12" cy="12" r="8" fill="none" stroke="#9ca3af" '
+                'stroke-width="1.8" stroke-dasharray="3 3"/>'
+                '</svg>'
+            )
+            none_item = QListWidgetItem(render_svg_icon(none_svg), "none")
+            none_item.setData(Qt.ItemDataRole.UserRole, None)
+            none_item.setToolTip("Plain colored folder (no symbol)")
+            self.symbol_list.addItem(none_item)
+            if target_restore is None:
+                self.symbol_list.setCurrentItem(none_item)
+
+        base_names = sorted(set(LUCIDE_SYMBOLS.keys()) | set(self.custom_symbols.keys()))
+        for name in base_names:
+            is_custom = name in self.custom_symbols
+            if mode == 1 and is_custom:
+                continue
+            if mode == 2 and not is_custom:
+                continue
+
+            linked_aliases = reverse_aliases.get(name, [])
+            searchable = " ".join([name] + linked_aliases)
+            if query and query not in searchable:
+                continue
+
+            stroke = "#f0abfc" if is_custom else "#f4f4f6"
+            preview_svg = build_symbol_preview_svg(name, self.all_symbols, stroke_color=stroke)
+            label = f"{name} *" if is_custom else name
+            item = QListWidgetItem(render_svg_icon(preview_svg), label)
+            item.setData(Qt.ItemDataRole.UserRole, name)
+
+            tip_parts = [f"Symbol: {name}"]
+            if is_custom:
+                tip_parts.append("Source: Custom SVG")
+            if linked_aliases:
+                tip_parts.append(f"Aliases: {', '.join(linked_aliases)}")
+            item.setToolTip("\n".join(tip_parts))
+
+            self.symbol_list.addItem(item)
+            if target_restore == name:
+                self.symbol_list.setCurrentItem(item)
+
+        self.symbol_list.blockSignals(False)
+        self._sync_custom_delete_state()
+
+    def _populate_alias_table(self) -> None:
+        base_names = set(LUCIDE_SYMBOLS.keys()) | set(self.custom_symbols.keys())
+        sorted_aliases = sorted(self.aliases.items())
+        self.alias_table.setRowCount(len(sorted_aliases))
+
+        for row, (alias_name, target) in enumerate(sorted_aliases):
+            alias_item = QTableWidgetItem(alias_name)
+            target_item = QTableWidgetItem(target)
+            status_text = "Valid" if target in base_names else "Missing target"
+            status_item = QTableWidgetItem(status_text)
+            if target not in base_names:
+                status_item.setForeground(QColor("#fb7185"))
+            else:
+                status_item.setForeground(QColor("#c084fc"))
+
+            self.alias_table.setItem(row, 0, alias_item)
+            self.alias_table.setItem(row, 1, target_item)
+            self.alias_table.setItem(row, 2, status_item)
+
+    # -----------------------------------------------------------------------
+    # TAB SWITCHING & WORKER TRACKING
+    # -----------------------------------------------------------------------
+
+    def _track_worker(self, worker: QThread) -> None:
+        self._active_workers.add(worker)
+        worker.finished.connect(lambda w=worker: self._cleanup_worker(w))
+
+    def _cleanup_worker(self, worker: QThread) -> None:
+        self._active_workers.discard(worker)
+        worker.deleteLater()
+
+    def _on_tab_changed(self, index: int) -> None:
+        if index == self.lucide_tab_index and not self.lucide_index_loaded:
+            self._load_lucide_index(force_refresh=False)
+        elif index == self.gc_tab_index and not self._cache_scanning:
+            self._start_cache_scan()
+
+    # -----------------------------------------------------------------------
+    # LIVE LUCIDE BROWSER TAB
+    # -----------------------------------------------------------------------
+
+    def _load_lucide_index(self, force_refresh: bool = False) -> None:
+        self.lucide_refresh_btn.setEnabled(False)
+        self.lucide_count_label.setText(
+            "Refreshing Lucide icon index from GitHub..."
+            if force_refresh
+            else "Loading official Lucide icon index..."
+        )
+        worker = LucideIndexWorker(force_refresh=force_refresh, parent=self)
+        self._track_worker(worker)
+        worker.finished_ok.connect(self._on_lucide_index_loaded)
+        worker.failed.connect(self._on_lucide_index_failed)
+        worker.start()
+
+    def _on_lucide_index_loaded(self, names: list[str]) -> None:
+        self.lucide_index = names
+        self.lucide_index_loaded = True
+        self.lucide_refresh_btn.setEnabled(True)
+        self._populate_lucide_list()
+        if self.lucide_selected_name:
+            self._update_lucide_footer(self.lucide_selected_name)
+
+    def _on_lucide_index_failed(self, error_msg: str) -> None:
+        self.lucide_refresh_btn.setEnabled(True)
+        self.lucide_count_label.setText(f"Failed to load Lucide index: {error_msg}")
+        self.status_label.setText(f"Lucide fetch error: {error_msg}")
+
+    def _lucide_item_icon(self, name: str) -> QIcon:
+        if name in self.custom_symbols:
+            svg = build_symbol_preview_svg(name, self.all_symbols, stroke_color="#f0abfc")
+            return render_svg_icon(svg, size=22)
+        if name in LUCIDE_SYMBOLS:
+            svg = build_symbol_preview_svg(name, self.all_symbols, stroke_color="#e4e4e7")
+            return render_svg_icon(svg, size=22)
+        if name in self.lucide_svg_cache:
+            try:
+                inner = validate_and_extract_svg(self.lucide_svg_cache[name])
+                svg = build_symbol_preview_svg(name, {name: inner}, stroke_color="#d8b4fe")
+                return render_svg_icon(svg, size=22)
+            except Exception:
+                pass
+        return self._placeholder_icon
+
+    def _lucide_item_label(self, name: str) -> str:
+        if name in self.custom_symbols:
+            return f"{name}    [custom]"
+        if name in LUCIDE_SYMBOLS:
+            return f"{name}    [built-in]"
+        return name
+
+    def _populate_lucide_list(self, _text: str = "") -> None:
+        if not self.lucide_index_loaded:
+            return
+
+        query = self.lucide_search_input.text().strip().lower()
+        mode = self.lucide_filter_combo.currentIndex()  # 0 = All, 1 = Not Installed, 2 = Already Installed
+        installed = set(LUCIDE_SYMBOLS.keys()) | set(self.custom_symbols.keys())
+
+        matches: list[str] = []
+        for name in self.lucide_index:
+            is_installed = name in installed
+            if mode == 1 and is_installed:
+                continue
+            if mode == 2 and not is_installed:
+                continue
+            if query and query not in name:
+                continue
+            matches.append(name)
+
+        self.lucide_result_list.blockSignals(True)
+        self.lucide_result_list.clear()
+
+        for name in matches:
+            item = QListWidgetItem(self._lucide_item_icon(name), self._lucide_item_label(name))
+            item.setData(Qt.ItemDataRole.UserRole, name)
+            self.lucide_result_list.addItem(item)
+            if name == self.lucide_selected_name:
+                self.lucide_result_list.setCurrentItem(item)
+
+        self.lucide_result_list.blockSignals(False)
+        self.lucide_count_label.setText(
+            f"Showing {len(matches)} of {len(self.lucide_index)} official Lucide icons  •  Click to preview live"
+        )
+
+    def _on_lucide_item_selected(
+        self,
+        current: QListWidgetItem | None,
+        _prev: QListWidgetItem | None,
+    ) -> None:
+        if current is None:
+            return
+        icon_name = current.data(Qt.ItemDataRole.UserRole)
+        if not isinstance(icon_name, str):
+            return
+
+        self.lucide_selected_name = icon_name
+        self._update_lucide_footer(icon_name)
+
+        if icon_name in self.lucide_svg_cache:
+            self._apply_lucide_preview_from_raw(icon_name, self.lucide_svg_cache[icon_name])
+            return
+
+        if icon_name in self.all_symbols:
+            self.lucide_preview_name = icon_name
+            self.lucide_preview_inner = self.all_symbols[icon_name]
+            glyph_svg = build_symbol_preview_svg(icon_name, self.all_symbols, stroke_color="#f0abfc")
+            self.lucide_glyph_preview.load(QByteArray(glyph_svg.encode("utf-8")))
+            self.update_preview()
+            return
+
+        self.lucide_import_btn.setEnabled(False)
+        self.lucide_import_as_btn.setEnabled(False)
+        self.lucide_detail_label.setText(f"Downloading '{icon_name}.svg' from lucide.dev...")
+        self.status_label.setText(f"Fetching Lucide icon '{icon_name}'...")
+
+        worker = LucideSvgWorker(icon_name, parent=self)
+        self._track_worker(worker)
+        worker.finished_ok.connect(self._on_lucide_svg_fetched)
+        worker.failed.connect(self._on_lucide_svg_failed)
+        worker.start()
+
+    def _on_lucide_svg_fetched(self, icon_name: str, raw_svg: str) -> None:
+        self.lucide_svg_cache[icon_name] = raw_svg
+
+        for idx in range(self.lucide_result_list.count()):
+            item = self.lucide_result_list.item(idx)
+            if item.data(Qt.ItemDataRole.UserRole) == icon_name:
+                item.setIcon(self._lucide_item_icon(icon_name))
+                break
+
+        if self.lucide_selected_name != icon_name:
+            return
+
+        self._apply_lucide_preview_from_raw(icon_name, raw_svg)
+        self._update_lucide_footer(icon_name)
+        self.status_label.setText(f"Previewing Lucide icon '{icon_name}' (not yet imported).")
+
+    def _on_lucide_svg_failed(self, icon_name: str, error_msg: str) -> None:
+        if self.lucide_selected_name == icon_name:
+            self.lucide_detail_label.setText(error_msg)
+        self.status_label.setText(error_msg)
+
+    def _apply_lucide_preview_from_raw(self, icon_name: str, raw_svg: str) -> None:
+        try:
+            inner = validate_and_extract_svg(raw_svg)
+        except FolderIconError as exc:
+            self.lucide_detail_label.setText(str(exc))
+            return
+
+        self.lucide_preview_name = icon_name
+        self.lucide_preview_inner = inner
+
+        glyph_svg = build_symbol_preview_svg(icon_name, {icon_name: inner}, stroke_color="#f0abfc")
+        self.lucide_glyph_preview.load(QByteArray(glyph_svg.encode("utf-8")))
+        self.update_preview()
+
+    def _update_lucide_footer(self, icon_name: str) -> None:
+        is_custom = icon_name in self.custom_symbols
+        is_builtin = icon_name in LUCIDE_SYMBOLS
+        has_svg = icon_name in self.lucide_svg_cache or is_custom or is_builtin
+
+        self.lucide_selected_label.setText(f"lucide / {icon_name}")
+        if is_custom:
+            self.lucide_detail_label.setText(f"Already imported in {SYMBOL_DIR}/{icon_name}.svg")
+            self.lucide_import_btn.setText("Re-import")
+        elif is_builtin:
+            self.lucide_detail_label.setText("Included in built-in symbols (import to create a custom override)")
+            self.lucide_import_btn.setText("Import Override")
+        else:
+            self.lucide_detail_label.setText("Online preview — click Import Symbol to save offline")
+            self.lucide_import_btn.setText("Import Symbol")
+
+        self.lucide_import_btn.setEnabled(has_svg)
+        self.lucide_import_as_btn.setEnabled(has_svg)
+
+    def _on_import_lucide_clicked(self, ask_name: bool = False) -> None:
+        icon_name = self.lucide_selected_name
+        if not icon_name:
+            return
+
+        raw_svg = self.lucide_svg_cache.get(icon_name)
+        if not raw_svg:
+            try:
+                raw_svg = fetch_lucide_icon_svg(icon_name)
+                self.lucide_svg_cache[icon_name] = raw_svg
+            except FolderIconError as exc:
+                QMessageBox.critical(self, "Download Failed", str(exc))
+                return
+
+        target_name = icon_name
+        if ask_name:
+            entered, ok = QInputDialog.getText(
+                self,
+                "Import Lucide Symbol As",
+                f"Save '{icon_name}' into custom symbols as:",
+                text=icon_name,
+            )
+            if not ok or not entered.strip():
+                return
+            target_name = entered.strip().lower()
+
+        try:
+            imported_name, dest = save_custom_svg_content(raw_svg, target_name, overwrite=False)
+        except FolderIconError as exc:
+            if "already exists" in str(exc):
+                reply = QMessageBox.question(
+                    self,
+                    "Symbol Already Exists",
+                    f"{exc}\n\nOverwrite existing custom symbol?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if reply != QMessageBox.StandardButton.Yes:
+                    return
+                try:
+                    imported_name, dest = save_custom_svg_content(raw_svg, target_name, overwrite=True)
+                except FolderIconError as inner_exc:
+                    QMessageBox.critical(self, "Import Failed", str(inner_exc))
+                    return
+            else:
+                QMessageBox.critical(self, "Invalid Lucide SVG", str(exc))
+                return
+
+        self.selected_symbol = imported_name
+        self.lucide_preview_name = None
+        self.lucide_preview_inner = None
+        self.reload_catalog(preserve_selection=True)
+        self._update_lucide_footer(icon_name)
+        self.update_preview()
+        self.status_label.setText(f"Imported Lucide symbol '{imported_name}' -> {dest}")
+
+    def _ensure_preview_imported_if_needed(self) -> bool:
+        """
+        If the folder preview is currently showing an un-imported online Lucide icon,
+        offer to import it into SYMBOL_DIR before applying or saving.
+        """
+        if not self.lucide_preview_name:
+            return True
+
+        name = self.lucide_preview_name
+        if name in self.all_symbols:
+            self.selected_symbol = name
+            self.lucide_preview_name = None
+            self.lucide_preview_inner = None
+            self.reload_catalog(preserve_selection=True)
+            return True
+
+        reply = QMessageBox.question(
+            self,
+            "Import Previewed Lucide Icon?",
+            f"'{name}' is currently an online preview from Lucide and has not been saved locally yet.\n\n"
+            f"Import '{name}.svg' into {SYMBOL_DIR} and continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return False
+
+        raw_svg = self.lucide_svg_cache.get(name)
+        if not raw_svg:
+            try:
+                raw_svg = fetch_lucide_icon_svg(name)
+                self.lucide_svg_cache[name] = raw_svg
+            except FolderIconError as exc:
+                QMessageBox.critical(self, "Import Failed", str(exc))
+                return False
+
+        try:
+            imported_name, _dest = save_custom_svg_content(raw_svg, name, overwrite=True)
+        except FolderIconError as exc:
+            QMessageBox.critical(self, "Import Failed", str(exc))
+            return False
+
+        self.selected_symbol = imported_name
+        self.lucide_preview_name = None
+        self.lucide_preview_inner = None
+        self.reload_catalog(preserve_selection=True)
+        if self.lucide_selected_name:
+            self._update_lucide_footer(self.lucide_selected_name)
+        return True
+
+    # -----------------------------------------------------------------------
+    # CACHE CLEANUP TAB (Background Scan + Interactive Selection)
+    # -----------------------------------------------------------------------
+
+    def _start_cache_scan(self) -> None:
+        if self._cache_scanning:
+            return
+        self._cache_scanning = True
+        self.gc_rescan_btn.setEnabled(False)
+        self.gc_select_all_btn.setEnabled(False)
+        self.gc_unselect_all_btn.setEnabled(False)
+        self.gc_delete_btn.setEnabled(False)
+        self.gc_summary_label.setText("Scanning...")
+        self.gc_loading_label.setText("Scanning tracked folders and home directories for orphaned SVGs...")
+        self.gc_loading_bar.setVisible(True)
+
+        worker = CacheScanWorker(parent=self)
+        self._track_worker(worker)
+        worker.finished_ok.connect(self._on_cache_scan_finished)
+        worker.failed.connect(self._on_cache_scan_failed)
+        worker.start()
+
+    def _on_cache_scan_finished(self, report: dict) -> None:
+        self._cache_scanning = False
+        self.gc_loading_bar.setVisible(False)
+        self.gc_rescan_btn.setEnabled(True)
+
+        in_use = report["in_use"]
+        orphaned = report["orphaned"]
+        total = report["total_count"]
+        reclaimable = format_bytes(report["orphaned_bytes"])
+
+        self.gc_summary_label.setText(
+            f"{total} cached  •  {len(in_use)} in use  •  {len(orphaned)} orphaned ({reclaimable})"
+        )
+
+        self.orphan_list.blockSignals(True)
+        self.orphan_list.clear()
+
+        for record in orphaned:
+            svg_path: Path = record["path"]
+            meta: dict[str, str] = record["metadata"]
+            size_str = format_bytes(record["size"])
+            label = f"{svg_path.stem}\n({size_str})"
+
+            item = QListWidgetItem(render_svg_file_icon(svg_path, size=52), label)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked)
+            item.setData(Qt.ItemDataRole.UserRole, svg_path)
+
+            tip_lines = [f"File: {svg_path.name}", f"Size: {size_str}"]
+            if meta.get("symbol"):
+                tip_lines.append(f"Symbol: {meta['symbol']}")
+            if meta.get("folder_color"):
+                tip_lines.append(f"Color: {meta['folder_color']}")
+            if meta.get("symbol_scale"):
+                tip_lines.append(f"Scale: {meta['symbol_scale']}")
+            item.setToolTip("\n".join(tip_lines))
+            self.orphan_list.addItem(item)
+
+        self.orphan_list.blockSignals(False)
+        has_orphans = len(orphaned) > 0
+        self.gc_select_all_btn.setEnabled(has_orphans)
+        self.gc_unselect_all_btn.setEnabled(has_orphans)
+        self._update_gc_selected_count()
+
+    def _on_cache_scan_failed(self, error_msg: str) -> None:
+        self._cache_scanning = False
+        self.gc_loading_bar.setVisible(False)
+        self.gc_rescan_btn.setEnabled(True)
+        self.gc_summary_label.setText(f"Scan failed: {error_msg}")
+        self.status_label.setText(f"Cache scan failed: {error_msg}")
+
+    def _toggle_gc_item_check(self, item: QListWidgetItem) -> None:
+        next_state = (
+            Qt.CheckState.Unchecked
+            if item.checkState() == Qt.CheckState.Checked
+            else Qt.CheckState.Checked
+        )
+        item.setCheckState(next_state)
+
+    def _set_all_gc_checked(self, checked: bool) -> None:
+        state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+        self.orphan_list.blockSignals(True)
+        for idx in range(self.orphan_list.count()):
+            self.orphan_list.item(idx).setCheckState(state)
+        self.orphan_list.blockSignals(False)
+        self._update_gc_selected_count()
+
+    def _checked_orphan_paths(self) -> list[Path]:
+        selected: list[Path] = []
+        for idx in range(self.orphan_list.count()):
+            item = self.orphan_list.item(idx)
+            if item.checkState() == Qt.CheckState.Checked:
+                path_val = item.data(Qt.ItemDataRole.UserRole)
+                if isinstance(path_val, Path):
+                    selected.append(path_val)
+        return selected
+
+    def _update_gc_selected_count(self) -> None:
+        count = len(self._checked_orphan_paths())
+        self.gc_delete_btn.setText(f"Delete Selected ({count})")
+        self.gc_delete_btn.setEnabled(count > 0 and not self._cache_scanning)
+
+    def _on_delete_selected_orphans(self) -> None:
+        targets = self._checked_orphan_paths()
+        if not targets:
+            return
+        reply = QMessageBox.question(
+            self,
+            "Delete Orphaned Icons?",
+            f"Permanently delete {len(targets)} unreferenced SVG file(s) from {OUTPUT_DIR}?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        deleted = delete_cached_icons(targets)
+        self.status_label.setText(f"Cache cleanup: removed {len(deleted)} orphaned SVG(s).")
+        self._start_cache_scan()
+
+    # -----------------------------------------------------------------------
+    # COLOR, CONTRAST & PREVIEW UPDATES
+    # -----------------------------------------------------------------------
+
+    def _set_preview_background(self, key: str) -> None:
+        if key not in ("dark", "gray", "light", "custom"):
+            return
+        self.preview_bg_key = key
+        chip = self.bg_chips.get(key)
+        if chip and not chip.isChecked():
+            chip.setChecked(True)
+        self._apply_preview_background_style()
+
+    def _on_preview_bg_hex_changed(self, text: str) -> None:
+        try:
+            norm = normalize_hex(text)
+        except FolderIconError:
+            return
+        self.custom_preview_bg_hex = norm
+        self._set_preview_background("custom")
+
+    def _pick_preview_bg_color(self) -> None:
+        chosen = QColorDialog.getColor(
+            QColor(self.custom_preview_bg_hex),
+            self,
+            "Choose Preview Background Color",
+        )
+        if chosen.isValid():
+            norm = chosen.name().lower()
+            self.custom_preview_bg_hex = norm
+            self.preview_bg_input.blockSignals(True)
+            self.preview_bg_input.setText(norm)
+            self.preview_bg_input.blockSignals(False)
+            self._set_preview_background("custom")
+
+    def _active_preview_bg_hex(self) -> str:
+        if self.preview_bg_key == "custom":
+            return self.custom_preview_bg_hex
+        return PREVIEW_PRESETS.get(self.preview_bg_key, "#0e0e14")
+
+    def _apply_preview_background_style(self) -> None:
+        bg_hex = self._active_preview_bg_hex()
+        r, g, b = parse_hex(bg_hex)
+        # Ensure high contrast for the readout label on any preview background
+        auto_contrast = contrast_color(r, g, b, "auto")
+        text_hex = "#e5e7eb" if auto_contrast == "#ffffff" else "#111827"
+
+        self.preview_box.setStyleSheet(
+            f"QFrame#PreviewBox {{ background-color: {bg_hex}; border: 1px solid #2a2438; border-radius: 12px; }}"
+        )
+        self.contrast_readout.setStyleSheet(
+            f"background-color: transparent; color: {text_hex}; font-size: 12px; font-weight: 600;"
+        )
+
+    def _rebuild_swatches(self) -> None:
+        while self.swatch_row.count():
+            child = self.swatch_row.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        combined: list[str] = []
+        for c in self.state.get("recent_colors", []) + PRESET_COLORS:
+            norm = c.lower()
+            if norm not in combined:
+                combined.append(norm)
+            if len(combined) >= 8:
+                break
+
+        for hex_col in combined:
+            btn = QPushButton()
+            btn.setFixedSize(26, 22)
+            btn.setToolTip(hex_col)
+            btn.setStyleSheet(
+                f"background-color: {hex_col}; border: 1px solid #3f3f52; border-radius: 5px;"
+            )
+            btn.clicked.connect(lambda _checked=False, col=hex_col: self._set_folder_color(col))
+            self.swatch_row.addWidget(btn)
+
+        self.swatch_row.addStretch(1)
+
+    def _record_recent_color(self, hex_col: str) -> None:
+        norm = hex_col.lower()
+        recent = [c.lower() for c in self.state.get("recent_colors", []) if c.lower() != norm]
+        recent.insert(0, norm)
+        self.state["recent_colors"] = recent[:8]
+        save_gui_state(self.state)
+        self._rebuild_swatches()
+
+    def _update_swatch_button_style(self) -> None:
+        self.color_swatch_btn.setStyleSheet(
+            f"background-color: {self.folder_hex}; border: 1px solid #52526b; border-radius: 6px;"
+        )
+
+    def _set_folder_color(self, hex_col: str) -> None:
+        try:
+            norm = normalize_hex(hex_col)
+        except FolderIconError:
+            return
+        self.folder_hex = norm
+        if self.hex_input.text().lower() != norm:
+            self.hex_input.blockSignals(True)
+            self.hex_input.setText(norm)
+            self.hex_input.blockSignals(False)
+        self._update_swatch_button_style()
+        self.update_preview()
+
+    def _pick_folder_color(self) -> None:
+        chosen = QColorDialog.getColor(QColor(self.folder_hex), self, "Choose Folder Color")
+        if chosen.isValid():
+            self._set_folder_color(chosen.name())
+
+    def _on_hex_text_changed(self, text: str) -> None:
+        try:
+            norm = normalize_hex(text)
+            self.folder_hex = norm
+            self._update_swatch_button_style()
+            self.update_preview()
+        except FolderIconError:
+            pass
+
+    def _on_contrast_mode_changed(self, index: int) -> None:
+        modes = ["auto", "white", "black", "custom"]
+        self.contrast_mode = modes[index]
+        is_custom = self.contrast_mode == "custom"
+        self.sym_hex_input.setEnabled(is_custom)
+        self.sym_pick_btn.setEnabled(is_custom)
+        self.update_preview()
+
+    def _on_sym_hex_changed(self, text: str) -> None:
+        try:
+            self.custom_symbol_hex = normalize_hex(text)
+            self.update_preview()
+        except FolderIconError:
+            pass
+
+    def _pick_symbol_color(self) -> None:
+        chosen = QColorDialog.getColor(QColor(self.custom_symbol_hex), self, "Choose Symbol Color")
+        if chosen.isValid():
+            self.sym_hex_input.setText(chosen.name())
+
+    def _on_scale_changed(self, value: int) -> None:
+        self.scale_ratio = value / 100.0
+        self.scale_val_lbl.setText(f"{value}%")
+        self.update_preview()
+
+    def _reset_symbol_style(self) -> None:
+        modes = ["auto", "white", "black", "custom"]
+        default_mode = SYMBOL_CONTRAST_MODE if SYMBOL_CONTRAST_MODE in modes else "auto"
+        default_scale_pct = int(round(SYMBOL_SCALE * 100))
+
+        self.contrast_mode = default_mode
+        self.custom_symbol_hex = "#ffffff"
+        self.scale_ratio = SYMBOL_SCALE
+
+        self.contrast_combo.blockSignals(True)
+        self.contrast_combo.setCurrentIndex(modes.index(default_mode))
+        self.contrast_combo.blockSignals(False)
+
+        self.sym_hex_input.blockSignals(True)
+        self.sym_hex_input.setText(self.custom_symbol_hex)
+        self.sym_hex_input.blockSignals(False)
+        is_custom = default_mode == "custom"
+        self.sym_hex_input.setEnabled(is_custom)
+        self.sym_pick_btn.setEnabled(is_custom)
+
+        self.scale_slider.blockSignals(True)
+        self.scale_slider.setValue(default_scale_pct)
+        self.scale_slider.blockSignals(False)
+        self.scale_val_lbl.setText(f"{default_scale_pct}%")
+
+        self.update_preview()
+        self.status_label.setText(
+            f"Symbol style reset to defaults ({default_mode}, {default_scale_pct}%)."
+        )
+
+    def _on_symbol_selected(self, current: QListWidgetItem | None, _prev: QListWidgetItem | None) -> None:
+        if current is None:
+            return
+        self.lucide_preview_name = None
+        self.lucide_preview_inner = None
+        self.selected_symbol = current.data(Qt.ItemDataRole.UserRole)
+        if self.selected_symbol:
+            self.alias_target_combo.setCurrentText(self.selected_symbol)
+        self._sync_custom_delete_state()
+        self.update_preview()
+
+    def _sync_custom_delete_state(self) -> None:
+        is_custom = bool(self.selected_symbol and self.selected_symbol in self.custom_symbols)
+        self.delete_custom_btn.setEnabled(is_custom)
+
+    def _effective_symbol_color_arg(self) -> str | None:
+        if self.contrast_mode == "custom":
+            return self.custom_symbol_hex
+        if self.contrast_mode == "white":
+            return "#ffffff"
+        if self.contrast_mode == "black":
+            return "#000000"
+        return None
+
+    def _active_preview_symbols_and_name(self) -> tuple[dict[str, str], str | None, bool]:
+        if self.lucide_preview_name and self.lucide_preview_inner:
+            merged = dict(self.all_symbols)
+            merged[self.lucide_preview_name] = self.lucide_preview_inner
+            is_unimported = self.lucide_preview_name not in self.all_symbols
+            return merged, self.lucide_preview_name, is_unimported
+        return self.all_symbols, self.selected_symbol, False
+
+    def update_preview(self) -> None:
+        sym_override = self._effective_symbol_color_arg()
+        symbols_map, active_sym, is_unimported_preview = self._active_preview_symbols_and_name()
+
+        svg_text = build_folder_svg(
+            hex_color=self.folder_hex,
+            symbol=active_sym,
+            symbol_color=sym_override,
+            all_symbols=symbols_map,
+            contrast_mode="auto",
+            scale_ratio=self.scale_ratio,
+        )
+        self.preview_svg.load(QByteArray(svg_text.encode("utf-8")))
+
+        if is_unimported_preview and active_sym:
+            self.symbol_badge.setText(f"{active_sym} (preview)")
+        else:
+            canon = canonical_symbol_name(active_sym, self.aliases)
+            self.symbol_badge.setText(f"symbol: {canon or 'none'}")
+
+        if not active_sym:
+            self.contrast_readout.setText("glyph: none")
+        elif sym_override:
+            self.contrast_readout.setText(f"glyph: {sym_override}")
+        else:
+            r, g, b = parse_hex(self.folder_hex)
+            auto_col = contrast_color(r, g, b, "auto")
+            self.contrast_readout.setText(f"glyph: auto ({auto_col})")
+
+    # -----------------------------------------------------------------------
+    # TARGET FOLDER MANAGEMENT (Single & Multi Modes)
+    # -----------------------------------------------------------------------
+
+    def _on_multi_mode_toggled(self, checked: bool) -> None:
+        self.multi_mode = checked
+        self.single_target_widget.setVisible(not checked)
+        self.multi_target_widget.setVisible(checked)
+
+        if checked:
+            raw = self.folder_input.text().strip()
+            if raw:
+                candidate = Path(raw).expanduser()
+                if candidate.is_dir():
+                    self._add_multi_folders([candidate])
+        else:
+            if self.multi_folder_list.count() > 0:
+                first_path = self.multi_folder_list.item(0).data(Qt.ItemDataRole.UserRole)
+                if isinstance(first_path, Path):
+                    self.folder_input.setText(str(first_path))
+
+        self._refresh_target_status()
+
+    def _add_multi_folders(self, paths: list[Path]) -> int:
+        existing: set[Path] = set()
+        for idx in range(self.multi_folder_list.count()):
+            val = self.multi_folder_list.item(idx).data(Qt.ItemDataRole.UserRole)
+            if isinstance(val, Path):
+                existing.add(val)
+
+        added = 0
+        for p in paths:
+            try:
+                resolved = p.expanduser().resolve()
+            except Exception:
+                continue
+            if not resolved.is_dir() or resolved in existing:
+                continue
+            existing.add(resolved)
+            item = QListWidgetItem(str(resolved))
+            item.setData(Qt.ItemDataRole.UserRole, resolved)
+            item.setToolTip(f"{resolved}\n{summarize_folder_icon(resolved)}")
+            self.multi_folder_list.addItem(item)
+            added += 1
+
+        self._sync_multi_buttons()
+        self._refresh_target_status()
+        return added
+
+    def _on_add_multi_folder_clicked(self) -> None:
+        fallback = Path(self.state.get("last_folder", str(Path.home())))
+        start = str(fallback if fallback.is_dir() else Path.home())
+        chosen = QFileDialog.getExistingDirectory(self, "Add Target Folder", start)
+        if chosen:
+            chosen_path = Path(chosen)
+            self._add_multi_folders([chosen_path])
+            self.state["last_folder"] = str(chosen_path.parent)
+            save_gui_state(self.state)
+
+    def _on_remove_multi_folders_clicked(self) -> None:
+        for item in self.multi_folder_list.selectedItems():
+            row = self.multi_folder_list.row(item)
+            self.multi_folder_list.takeItem(row)
+        self._sync_multi_buttons()
+        self._refresh_target_status()
+
+    def _on_clear_multi_folders_clicked(self) -> None:
+        self.multi_folder_list.clear()
+        self._sync_multi_buttons()
+        self._refresh_target_status()
+
+    def _sync_multi_buttons(self) -> None:
+        has_items = self.multi_folder_list.count() > 0
+        has_selection = len(self.multi_folder_list.selectedItems()) > 0
+        self.remove_folder_btn.setEnabled(has_selection)
+        self.clear_folders_btn.setEnabled(has_items)
+
+    def _refresh_multi_item_tooltips(self) -> None:
+        for idx in range(self.multi_folder_list.count()):
+            item = self.multi_folder_list.item(idx)
+            val = item.data(Qt.ItemDataRole.UserRole)
+            if isinstance(val, Path):
+                item.setToolTip(f"{val}\n{summarize_folder_icon(val)}")
+
+    def _refresh_target_status(self) -> None:
+        if self.multi_mode:
+            count = self.multi_folder_list.count()
+            self.apply_btn.setText(
+                f"Apply to {count} Folder{'s' if count != 1 else ''}" if count > 0 else "Apply to Folders"
+            )
+            self.revert_btn.setText(
+                f"Revert {count} Folder{'s' if count != 1 else ''}" if count > 0 else "Revert Folders"
+            )
+            self.revert_btn.setEnabled(count > 0)
+            self._refresh_multi_item_tooltips()
+            return
+
+        self.apply_btn.setText("Apply to Folder")
+        self.revert_btn.setText("Revert Folder")
+
+        raw = self.folder_input.text().strip()
+        if not raw:
+            self.folder_status_label.setText("No folder selected")
+            self.folder_status_label.setStyleSheet("background-color: transparent; color: #9ca3af; font-size: 12px;")
+            self.revert_btn.setEnabled(False)
+            return
+
+        candidate = Path(raw).expanduser()
+        if not candidate.is_dir():
+            self.folder_status_label.setText("Not a valid directory")
+            self.folder_status_label.setStyleSheet("background-color: transparent; color: #fb7185; font-size: 12px;")
+            self.revert_btn.setEnabled(False)
+            return
+
+        info = inspect_directory_icon(candidate)
+        summary = summarize_folder_icon(candidate)
+        has_icon = bool(info["exists"] and info["icon"])
+        self.revert_btn.setEnabled(has_icon)
+
+        if has_icon:
+            self.folder_status_label.setText(summary)
+            self.folder_status_label.setStyleSheet("background-color: transparent; color: #d8b4fe; font-size: 12px;")
+        else:
+            self.folder_status_label.setText(summary)
+            self.folder_status_label.setStyleSheet("background-color: transparent; color: #9ca3af; font-size: 12px;")
+
+    def _collect_target_folders(self) -> list[Path] | None:
+        if self.multi_mode:
+            folders: list[Path] = []
+            for idx in range(self.multi_folder_list.count()):
+                val = self.multi_folder_list.item(idx).data(Qt.ItemDataRole.UserRole)
+                if isinstance(val, Path) and val.is_dir():
+                    folders.append(val)
+            if not folders:
+                QMessageBox.warning(self, "No Target Folders", "Add at least one valid folder to the queue.")
+                return None
+            return folders
+
+        raw_folder = self.folder_input.text().strip()
+        if not raw_folder:
+            QMessageBox.warning(self, "Missing Folder", "Please select or enter a target folder path.")
+            return None
+
+        folder_path = Path(raw_folder).expanduser().resolve()
+        if not folder_path.is_dir():
+            QMessageBox.critical(self, "Invalid Directory", f"Not a valid directory:\n{folder_path}")
+            return None
+        return [folder_path]
+
+    # -----------------------------------------------------------------------
+    # FOLDER & SVG ACTIONS
+    # -----------------------------------------------------------------------
+
+    def _browse_folder(self) -> None:
+        raw = self.folder_input.text().strip()
+        fallback = Path(self.state.get("last_folder", str(Path.home())))
+        current = Path(raw).expanduser() if raw else fallback
+        start = str(current if current.is_dir() else Path.home())
+        chosen = QFileDialog.getExistingDirectory(self, "Select Target Folder", start)
+        if chosen:
+            self.folder_input.setText(chosen)
+
+    def _on_save_svg_clicked(self) -> None:
+        if not self._ensure_preview_imported_if_needed():
+            return
+
+        save_dir = self._get_svg_save_dir()
+        if save_dir.exists() and not save_dir.is_dir():
+            QMessageBox.critical(
+                self,
+                "Invalid SVG Save Path",
+                f"Configured SVG save path is a file, not a directory:\n{save_dir}\n\n"
+                "Update it in the Options tab.",
+            )
+            return
+
+        sym_override = self._effective_symbol_color_arg()
+        dest = icon_path(
+            symbol=self.selected_symbol,
+            hex_color=self.folder_hex,
+            out_dir=save_dir,
+            symbol_color=sym_override,
+            scale_ratio=self.scale_ratio,
+            aliases=self.aliases,
+        )
+
+        svg_text = build_folder_svg(
+            hex_color=self.folder_hex,
+            symbol=self.selected_symbol,
+            symbol_color=sym_override,
+            all_symbols=self.all_symbols,
+            scale_ratio=self.scale_ratio,
+        )
+        try:
+            write_icon(svg_text, dest)
+        except Exception as exc:
+            QMessageBox.critical(self, "Save Failed", f"Could not write SVG to {dest}:\n{exc}")
+            return
+
+        self._record_recent_color(self.folder_hex)
+        self._refresh_options_status()
+        self.status_label.setText(f"Saved SVG: {dest}")
+
+    def _on_apply_clicked(self) -> None:
+        folders = self._collect_target_folders()
+        if not folders:
+            return
+        if not self._ensure_preview_imported_if_needed():
+            return
+
+        ensure_dirs()
+        sym_override = self._effective_symbol_color_arg()
+        out_path = icon_path(
+            symbol=self.selected_symbol,
+            hex_color=self.folder_hex,
+            symbol_color=sym_override,
+            scale_ratio=self.scale_ratio,
+            aliases=self.aliases,
+        )
+        svg_text = build_folder_svg(
+            hex_color=self.folder_hex,
+            symbol=self.selected_symbol,
+            symbol_color=sym_override,
+            all_symbols=self.all_symbols,
+            scale_ratio=self.scale_ratio,
+        )
+        write_icon(svg_text, out_path)
+
+        approve_all = False
+        applied_count = 0
+        is_batch = len(folders) > 1
+
+        for folder_path in folders:
+            existing_content = get_existing_directory_contents(folder_path)
+            if existing_content is not None and not approve_all:
+                dot_dir = folder_path / ".directory"
+                buttons = QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                if is_batch:
+                    buttons |= QMessageBox.StandardButton.YesToAll | QMessageBox.StandardButton.Cancel
+
+                reply = QMessageBox.question(
+                    self,
+                    "Overwrite .directory Icon?",
+                    f"'{dot_dir}' already exists and will be updated.\n\n"
+                    f"Existing contents:\n{existing_content.strip()}\n\nProceed?",
+                    buttons,
+                    QMessageBox.StandardButton.No,
+                )
+                if reply == QMessageBox.StandardButton.Cancel:
+                    break
+                if reply == QMessageBox.StandardButton.YesToAll:
+                    approve_all = True
+                elif reply != QMessageBox.StandardButton.Yes:
+                    continue
+
+            try:
+                apply_desktop_icon(folder_path, out_path.resolve())
+                applied_count += 1
+            except FolderIconError as exc:
+                QMessageBox.critical(self, "Error", str(exc))
+                return
+
+        self._record_recent_color(self.folder_hex)
+        self.state["last_folder"] = str(folders[-1])
+        save_gui_state(self.state)
+        self._refresh_target_status()
+
+        fname = icon_filename(
+            symbol=self.selected_symbol,
+            hex_color=self.folder_hex,
+            symbol_color=sym_override,
+            scale_ratio=self.scale_ratio,
+            aliases=self.aliases,
+        )
+        if applied_count == 0:
+            self.status_label.setText("Apply cancelled; no folders modified.")
+        elif is_batch:
+            self.status_label.setText(f"Applied '{fname}' to {applied_count}/{len(folders)} folders.")
+        else:
+            self.status_label.setText(f"Applied '{fname}' -> {folders[0] / '.directory'}")
+
+    def _on_revert_clicked(self) -> None:
+        folders = self._collect_target_folders()
+        if not folders:
+            return
+
+        styled = [
+            f for f in folders
+            if (info := inspect_directory_icon(f))["exists"] and info["icon"]
+        ]
+        if not styled:
+            self.status_label.setText("Selected folder(s) already use the default Breeze icon.")
+            self._refresh_target_status()
+            return
+
+        preview_lines = "\n".join(f"• {p}" for p in styled[:8])
+        if len(styled) > 8:
+            preview_lines += f"\n• ...and {len(styled) - 8} more"
+
+        reply = QMessageBox.question(
+            self,
+            "Revert Folder Icon?",
+            f"Remove custom .directory icon from {len(styled)} folder(s)?\n\n{preview_lines}",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            self.status_label.setText("Revert cancelled.")
+            return
+
+        reverted = 0
+        for folder_path in folders:
+            try:
+                res = reset_desktop_icon(folder_path)
+                if res["status"] in ("deleted", "updated"):
+                    reverted += 1
+            except FolderIconError as exc:
+                QMessageBox.critical(self, "Error", str(exc))
+                return
+
+        self._refresh_target_status()
+        self.status_label.setText(f"Reverted {reverted} folder(s) to default Breeze icon.")
+
+    # -----------------------------------------------------------------------
+    # CUSTOM SVG IMPORT & DELETE
+    # -----------------------------------------------------------------------
+
+    def _on_import_svg_clicked(self) -> None:
+        files, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Import 24x24 Lucide SVG Symbol(s)",
+            str(Path.home()),
+            "SVG Files (*.svg)",
+        )
+        if not files:
+            return
+        for file_str in files:
+            self._import_single_svg(Path(file_str), ask_name=(len(files) == 1))
+
+    def _import_single_svg(self, source: Path, ask_name: bool = True) -> None:
+        custom_name = source.stem.lower()
+        if ask_name:
+            entered, ok = QInputDialog.getText(
+                self,
+                "Symbol Name",
+                f"Name for '{source.name}' (must be a 24x24 Lucide SVG):",
+                text=custom_name,
+            )
+            if not ok or not entered.strip():
+                return
+            custom_name = entered.strip().lower()
+
+        try:
+            imported_name, dest = import_custom_svg(source, custom_name=custom_name, overwrite=False)
+        except FolderIconError as exc:
+            if "already exists" in str(exc):
+                reply = QMessageBox.question(
+                    self,
+                    "Symbol Already Exists",
+                    f"{exc}\n\nOverwrite existing custom symbol?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if reply != QMessageBox.StandardButton.Yes:
+                    return
+                try:
+                    imported_name, dest = import_custom_svg(source, custom_name=custom_name, overwrite=True)
+                except FolderIconError as inner_exc:
+                    QMessageBox.critical(self, "Import Failed", str(inner_exc))
+                    return
+            else:
+                QMessageBox.critical(self, "Invalid Lucide SVG", str(exc))
+                return
+
+        self.lucide_preview_name = None
+        self.lucide_preview_inner = None
+        self.selected_symbol = imported_name
+        self.reload_catalog(preserve_selection=True)
+        self.update_preview()
+        self.status_label.setText(f"Imported custom symbol '{imported_name}' -> {dest}")
+
+    def _on_delete_custom_clicked(self) -> None:
+        if not self.selected_symbol or self.selected_symbol not in self.custom_symbols:
+            return
+        name = self.selected_symbol
+        reply = QMessageBox.question(
+            self,
+            "Delete Custom Symbol",
+            f"Delete custom symbol '{name}' from {SYMBOL_DIR}?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            delete_custom_svg(name)
+        except FolderIconError as exc:
+            QMessageBox.critical(self, "Error", str(exc))
+            return
+
+        self.selected_symbol = "gamepad" if "gamepad" in LUCIDE_SYMBOLS else None
+        self.reload_catalog(preserve_selection=True)
+        if self.lucide_selected_name:
+            self._update_lucide_footer(self.lucide_selected_name)
+        self.update_preview()
+        self.status_label.setText(f"Deleted custom symbol '{name}'.")
+
+    # -----------------------------------------------------------------------
+    # ALIAS MANAGEMENT
+    # -----------------------------------------------------------------------
+
+    def _on_create_alias_clicked(self) -> None:
+        raw_target = self.alias_target_combo.currentText().strip()
+        raw_alias = self.alias_name_input.text().strip()
+
+        try:
+            plan = check_alias_plan(raw_target, raw_alias)
+        except FolderIconError as exc:
+            QMessageBox.warning(self, "Invalid Alias", str(exc))
+            return
+
+        target_name = plan["target"]
+        alias_name = plan["alias"]
+
+        if plan["already_identical"]:
+            self.status_label.setText(f"Alias '{alias_name}' already points to '{target_name}'.")
+            return
+
+        if plan["warnings"]:
+            warning_bullets = "\n".join(f"• {w}" for w in plan["warnings"])
+            reply = QMessageBox.warning(
+                self,
+                "Alias Conflict Warning",
+                f"Creating alias '{alias_name}' -> '{target_name}' triggered warnings:\n\n"
+                f"{warning_bullets}\n\nProceed anyway?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                self.status_label.setText("Alias creation cancelled.")
+                return
+
+        set_alias(target_name, alias_name)
+        self.alias_name_input.clear()
+        self.reload_catalog(preserve_selection=True)
+        self.status_label.setText(f"Alias created: {alias_name} -> {target_name}")
+
+    def _on_remove_alias_clicked(self) -> None:
+        row = self.alias_table.currentRow()
+        if row < 0:
+            return
+        alias_item = self.alias_table.item(row, 0)
+        if alias_item is None:
+            return
+        alias_name = alias_item.text()
+        try:
+            remove_alias(alias_name)
+        except FolderIconError as exc:
+            QMessageBox.critical(self, "Error", str(exc))
+            return
+
+        self.reload_catalog(preserve_selection=True)
+        self.status_label.setText(f"Removed alias '{alias_name}'.")
+
+    def _on_alias_double_clicked(self, item: QTableWidgetItem) -> None:
+        row = item.row()
+        target_item = self.alias_table.item(row, 1)
+        if target_item is None:
+            return
+        target = target_item.text()
+        if target in self.all_symbols:
+            self.lucide_preview_name = None
+            self.lucide_preview_inner = None
+            self.selected_symbol = target
+            self.reload_catalog(preserve_selection=True)
+            self.update_preview()
+            self.tabs.setCurrentIndex(0)
+
+    # -----------------------------------------------------------------------
+    # DRAG AND DROP & WINDOW LIFECYCLE
+    # -----------------------------------------------------------------------
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        urls = event.mimeData().urls()
+        if not urls:
+            return
+
+        dropped_dirs: list[Path] = []
+        dropped_svgs: list[Path] = []
+
+        for url in urls:
+            local = Path(url.toLocalFile())
+            if local.is_dir():
+                dropped_dirs.append(local)
+            elif local.is_file() and local.suffix.lower() == ".svg":
+                dropped_svgs.append(local)
+
+        if dropped_dirs:
+            if len(dropped_dirs) > 1 and not self.multi_mode:
+                self.multi_toggle_btn.setChecked(True)
+            if self.multi_mode:
+                added = self._add_multi_folders(dropped_dirs)
+                self.status_label.setText(f"Added {added} folder(s) to target queue.")
+            else:
+                self.folder_input.setText(str(dropped_dirs[0]))
+                self.status_label.setText(f"Target folder set: {dropped_dirs[0]}")
+
+        for svg_file in dropped_svgs:
+            self._import_single_svg(svg_file, ask_name=(len(dropped_svgs) == 1))
+
+    def closeEvent(self, event) -> None:
+        for worker in list(self._active_workers):
+            if worker.isRunning():
+                worker.quit()
+                worker.wait(500)
+        super().closeEvent(event)
+
+
+# ---------------------------------------------------------------------------
+# ENTRY POINT
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    app = QApplication(sys.argv)
+    app.setApplicationName("folder-icon-gui")
+    app.setStyleSheet(DARK_STYLESHEET)
+
+    initial_folders: list[Path] = []
+    for raw_arg in sys.argv[1:]:
+        candidate = Path(raw_arg).expanduser().resolve()
+        if candidate.is_dir() and candidate not in initial_folders:
+            initial_folders.append(candidate)
+
+    window = FolderIconWindow(initial_folders=initial_folders)
+    window.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
