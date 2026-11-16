@@ -96,6 +96,8 @@ hl.bind("XF86AudioNext", 					hl.dsp.exec_cmd("playerctl next"), { locked = true
 hl.bind("XF86AudioPause", 					hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/Pause" })
 hl.bind("XF86AudioPlay", 					hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/Pause" })
 hl.bind("XF86AudioPrev", 					hl.dsp.exec_cmd("playerctl previous"), { locked = true, description = "Previous track" })
+-- sets 'stopcd' as a bind to rewind playing media to start (ex: 0:00 on a youtube video)
+hl.bind("XF86AudioStop",                    hl.dsp.exec_cmd("playerctl position 0"), { locked = true, description = "Restart track" })
 
 -- Midia keybinds - extras that uses keypad keys
 hl.bind(mainMod .. " + KP_Up", 				hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, description = "Increase volume" })
@@ -106,8 +108,12 @@ hl.bind(mainMod .. " + KP_Add",      		hl.dsp.exec_cmd("wpctl set-volume @DEFAUL
 hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-"), { locked = true, description = "Decrease mic volume" })
 
 
---  Opens Workspace Overview (a qml script)
-hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/hypr/utilities/scripts/workspace-overview.sh"))
+-- Quickshells scripts
+--  Opens Workspace Overview
+hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/quickshell/utilities/scripts/"))
+
+-- enables / disables editing on widgets
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc -p /home/lsnozin/Projects/lSnozin-hyprland-dotfiles/.config/quickshell/desktop-widgets call widgets toggleLock"))
 
 -- Faster mouse scroll while Super is held.
 

@@ -137,6 +137,7 @@ end)
 --#region CustomVisibleWindowRules
 -- window rules that visible does things
 
+
 -- windows for firefox Profiles (workspaces 1 & 4, for main and kitty respectively)
 local profileWs = { Main = WS.WEB, kitty = WS.WEB_KITTY }
 local handled = {}
@@ -196,17 +197,6 @@ local moveWDRule = hl.window_rule({
 	workspace = WS.GAMES,
 })
 
---#endregion
-
--- window rule for Workspace 6 (Launchers)
---[[
-local moveSteamRule = hl.window_rule({
-	name = "set-steam-workspace",
-	match = { class = "steam"},
-	workspace = WS.LAUNCHERS .. " silent",
-})
-]]
-
 -- fixes deltarune window going off monitor, while also setting it to worspace Games
 local moveDeltaruneRule = hl.window_rule({
 	name = "fix-deltarune-position",
@@ -218,6 +208,18 @@ local moveDeltaruneRule = hl.window_rule({
 	move = { 100, 100 },
 	suppress_event = "x11configurerequest fullscreen maximize",
 })
+
+--#endregion
+
+-- window rule for Workspace 6 (Launchers)
+--[[
+local moveSteamRule = hl.window_rule({
+	name = "set-steam-workspace",
+	match = { class = "steam"},
+	workspace = WS.LAUNCHERS .. " silent",
+})
+]]
+
 
 -- window rule for Workspace 10 (discord)
 local moveDiscordRule = hl.window_rule({

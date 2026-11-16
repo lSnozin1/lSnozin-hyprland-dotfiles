@@ -1,0 +1,88 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "kitty",
+    "source": "~/.config/fastfetch/fetch.png",
+    "width": 18,
+    "height": 9,
+    "padding": {
+      "top": 1,
+      "left": 1,
+      "right": 2
+    },
+    "color": {
+      "1": "cyan"
+    }
+  },
+  "display": {
+    "separator": " "
+  },
+  "modules": [
+    {
+      "type": "custom",
+      "format": "\u001b[38;5;211m╭───╮\u001b[0m"
+    },
+    {
+      "type": "title",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[211m\uf007 \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "magenta",
+      "format": "{user-name}@{host-name}"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[38;5;211m├───┤\u001b[0m"
+    },
+    {
+      "type": "os",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[37m\uf17c \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "red",
+      "format": "{name}"
+    },
+    {
+      "type": "kernel",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[37m\uf109 \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "magenta",
+      "format": "{release}"
+    },
+    {
+      "type": "wm",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[36m\uf2d0 \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "cyan",
+      "format": "{pretty-name}"
+    },
+    {
+      "type": "packages",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[36m\uf1b2 \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "cyan",
+      "format": "{pacman} pkgs"
+    },
+    {
+      "type": "command",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[33m\uf120 \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "yellow",
+      "text": "basename \"$SHELL\""
+    },
+    {
+      "type": "command",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[33m\uf2db \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "yellow",
+      "text": "ram=$(free -h | awk '/Mem:/ {print $3 \"/\" $2}'); ram_pct=$(free | awk '/Mem:/ {printf \"%.0f\", $3/$2*100}'); swap_pct=$(free | awk '/Swap:/ && $2>0 {printf \"%.0f\", $3/$2*100}'); echo -e \"$ram (\\033[33m$ram_pct%\\033[0m|\\033[33m$swap_pct%\\033[0m)\""
+    },
+    {
+      "type": "uptime",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[32m\uf017 \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "green",
+      "format": "{days}d {hours}h {minutes}m"
+    },
+    {
+      "type": "command",
+      "key": "\u001b[38;5;211m│\u001b[0m \u001b[32m\uf073 \u001b[38;5;211m│\u001b[0m",
+      "keyColor": "green",
+      "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo \"${days_difference}d\""
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[38;5;211m╰───╯\u001b[0m"
+    }
+  ]
+}
