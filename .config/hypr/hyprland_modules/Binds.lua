@@ -113,7 +113,7 @@ hl.bind(mainMod .. " + KP_Subtract", 		hl.dsp.exec_cmd("wpctl set-volume @DEFAUL
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("~/.config/quickshell/utilities/scripts/"))
 
 -- enables / disables editing on widgets
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc -p /home/lsnozin/Projects/lSnozin-hyprland-dotfiles/.config/quickshell/desktop-widgets call widgets toggleLock"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc -p ~/.config/quickshell/desktop-widgets call widgets toggleLock"))
 
 -- Faster mouse scroll while Super is held.
 

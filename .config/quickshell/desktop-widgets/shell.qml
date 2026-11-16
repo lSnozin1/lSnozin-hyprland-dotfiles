@@ -9,6 +9,7 @@ ShellRoot {
     // ---- Shared settings ----
     property string monitorName: "DP-1"
     property bool locked: true
+    property bool showAscii: false
     property color accent: "#ff79c6"
     property string home: Quickshell.env("HOME")
     // -------------------------
@@ -40,22 +41,26 @@ ShellRoot {
             WlrLayershell.layer: WlrLayer.Bottom
             WlrLayershell.namespace: "desktop-widgets"
 
+            Item {
+                id: editArea
+                anchors.fill: parent
+            }
+
             Region { id: emptyMask }
             Region {
                 id: panelMask
-                Region { item: asciiPanel }
-                Region { item: imagePanel }
-                Region { item: termPanel.editFrame }
+                Region { item: editArea }
             }
 
             // ---- Widget 1: ASCII art ----
             AsciiWidget {
                 id: asciiPanel
+                visible: root.showAscii
                 name: "ascii"
                 locked: root.locked
                 accentColor: root.accent
                 x: 40
-                y: 40
+                y: 420
                 zoom: 1.0
                 artPath: root.home + "/.config/fastfetch/miku.txt"
                 fontSize: 10
@@ -70,9 +75,9 @@ ShellRoot {
                 locked: root.locked
                 accentColor: root.accent
                 x: 40
-                y: 420
+                y: 40
                 zoom: 1.0
-                imagePath: root.home + "/.config/fastfetch/fetch.png"
+                imagePath: Qt.resolvedUrl("WidgetGirl.webp").toString().replace(/^file:\/\//, "")
                 baseWidth: 300
             }
 
@@ -81,12 +86,13 @@ ShellRoot {
                 id: termPanel
                 locked: root.locked
                 accentColor: root.accent
+                panelOpacity: 1.0
                 monitorName: root.monitorName
                 screenW: modelData.width
                 screenH: modelData.height
-                termX: 1425
-                termY: 630
-                termW: 480
+                termX: 1410
+                termY: 635
+                termW: 500
                 termH: 400
                 fetchConfig: root.home + "/.config/fastfetch/mini-fetch.jsonc"
             }

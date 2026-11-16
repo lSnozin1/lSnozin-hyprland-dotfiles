@@ -6,11 +6,13 @@ Rectangle {
     // Used in the log line printed after a drag or resize
     property string name: "panel"
 
-    // Shared state and style
+// Shared state and style
     property bool locked: true
     property real zoom: 1.0
     property int padding: 16
+    property int borderWidth: 2
     property color accentColor: "#ff79c6"
+    property color borderColor: accentColor
     property color panelColor: "#1a1025"
     property real panelOpacity: 0.95
 
@@ -28,6 +30,8 @@ Rectangle {
     height: contentHeight * zoom + padding * 2
     radius: 12
     color: Qt.alpha(panelColor, panelOpacity)
+    border.width: borderWidth
+    border.color: borderColor
     clip: true
 
     Item {
@@ -74,6 +78,7 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
+                preventStealing: true
                 cursorShape: handle.modelData.left === handle.modelData.top
                     ? Qt.SizeFDiagCursor : Qt.SizeBDiagCursor
                 property real startZoom: 1

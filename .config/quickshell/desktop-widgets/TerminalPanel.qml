@@ -24,6 +24,7 @@ Item {
     property string fetchConfig: ""
 
     readonly property int gripSize: 22
+    readonly property int cornerInset: 3
     property bool movePending: false
     property bool sizePending: false
     readonly property bool dirty: movePending || sizePending
@@ -41,10 +42,10 @@ Item {
 
     function marginArgs() {
         return [
-            "margin-left=" + Math.round(termX),
-            "margin-top=" + Math.round(termY),
-            "margin-right=" + Math.round(screenW - termX - termW),
-            "margin-bottom=" + Math.round(screenH - termY - termH)
+            "margin-left=" + Math.round(termX + cornerInset),
+            "margin-top=" + Math.round(termY + cornerInset),
+            "margin-right=" + Math.round(screenW - termX - termW + cornerInset),
+            "margin-bottom=" + Math.round(screenH - termY - termH + cornerInset)
         ]
     }
 
@@ -56,7 +57,10 @@ Item {
         ]
         args = args.concat(marginArgs())
         if (sizePending) {
-            args.push("columns=" + Math.round(termW) + "px", "lines=" + Math.round(termH) + "px")
+            args.push(
+                "columns=" + Math.round(termW - cornerInset * 2) + "px",
+                "lines=" + Math.round(termH - cornerInset * 2) + "px"
+            )
         }
         movePending = false
         sizePending = false
@@ -77,12 +81,12 @@ Item {
             "kitten", "panel",
             "--edge=none", "--layer=background",
             "--output-name=" + monitorName,
-            "--lines=" + termH + "px",
-            "--columns=" + termW + "px",
-            "--margin-left=" + termX,
-            "--margin-top=" + termY,
-            "--margin-right=" + (screenW - termX - termW),
-            "--margin-bottom=" + (screenH - termY - termH),
+            "--lines=" + (termH - cornerInset * 2) + "px",
+            "--columns=" + (termW - cornerInset * 2) + "px",
+            "--margin-left=" + (termX + cornerInset),
+            "--margin-top=" + (termY + cornerInset),
+            "--margin-right=" + (screenW - termX - termW + cornerInset),
+            "--margin-bottom=" + (screenH - termY - termH + cornerInset),
             "--focus-policy=on-demand",
             "-o", "background_opacity=" + panelOpacity,
             "-o", "background=" + panelColor,
@@ -118,15 +122,27 @@ Item {
     }
 
     Rectangle {
+        id: borderFrame
+        x: ctl.termX
+        y: ctl.termY
+        width: ctl.termW
+        height: ctl.termH
+        radius: 8
+        color: "transparent"
+        border.width: 3
+        border.color: ctl.accentColor
+    }
+
+    Rectangle {
         id: editFrame
         visible: !ctl.locked
         x: ctl.termX
         y: ctl.termY
         width: ctl.termW
         height: ctl.termH
-        radius: 6
+        radius: 8
         color: Qt.alpha(ctl.accentColor, 0.15)
-        border.width: 2
+        border.width: 3
         border.color: Qt.alpha(ctl.accentColor, 0.8)
 
         MouseArea {
@@ -175,6 +191,7 @@ Item {
 
             MouseArea {
                 anchors.fill: parent
+                preventStealing: true
                 cursorShape: handle.modelData.left === handle.modelData.top
                     ? Qt.SizeFDiagCursor : Qt.SizeBDiagCursor
                 property real startMouseX: 0

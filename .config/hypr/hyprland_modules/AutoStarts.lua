@@ -44,6 +44,9 @@ hl.on("hyprland.start", function()
 	-- wallpaper (not that important)
 	hl.exec_cmd("sleep 5 && env PATH=\"$HOME/.local/share/waywallen-shim:$PATH\" waywallen --no-ui")
 
+	-- quickshell widgets on background
+	hl.exec_cmd("~/.local/bin/desktop-widgets")
+
 	-- 	hl.exec_cmd('linux-wallpaperengine --screen-root ' .. PRIMARY_MONITOR .. ' --scaling stretch --fullscreen-pause-only-active --fps 60 --assets-dir "/mnt/SO/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/assets" "/mnt/SO/Program Files (x86)/Steam/steamapps/workshop/content/431960/2799877694/"')	hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
 	-- 	hl.exec_cmd('linux-wallpaperengine --screen-root ' .. MONITOR2 .. ' --scaling stretch --fullscreen-pause-only-active --fps 60 --assets-dir "/mnt/SO/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/assets" "/mnt/SO/Program Files (x86)/Steam/steamapps/workshop/content/431960/2225690388/"') 
 	--  hl.exec_cmd(terminal)
