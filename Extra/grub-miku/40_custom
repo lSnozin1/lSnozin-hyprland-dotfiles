@@ -1,0 +1,29 @@
+#!/bin/sh
+exec tail -n +3 $0
+menuentry 'CachyOS Linux' --class cachyos --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-simple-b1e4e6cc-c72e-44c7-b253-0e78321ed5a9' {
+    load_video
+    set gfxpayload=keep
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid --set=root b1e4e6cc-c72e-44c7-b253-0e78321ed5a9
+    echo 'Loading Linux linux-cachyos ...'
+    linux /boot/vmlinuz-linux-cachyos root=UUID=b1e4e6cc-c72e-44c7-b253-0e78321ed5a9 rw nowatchdog nvme_load=YES splash loglevel=3
+    echo 'Loading initial ramdisk ...'
+    initrd /boot/initramfs-linux-cachyos.img
+}
+
+menuentry 'Windows Boot Manager (on /dev/nvme0n1p1)' --class windows --class os $menuentry_id_option 'osprober-efi-9022-B3B3' {
+    insmod part_gpt
+    insmod fat
+    search --no-floppy --fs-uuid --set=root 9022-B3B3
+    chainloader /efi/Microsoft/Boot/bootmgfw.efi
+}
+
+menuentry 'CachyOS Backup' --class weird-linux --class gnu-linux --class gnu --class os $menuentry_id_option 'osprober-gnulinux-simple-9ebf1173-18b8-460c-ad14-11bba386f3b6' {
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid --set=root 9ebf1173-18b8-460c-ad14-11bba386f3b6
+    linux /boot/vmlinuz-linux-cachyos root=UUID=9ebf1173-18b8-460c-ad14-11bba386f3b6 rw nowatchdog nvme_load=YES splash loglevel=3
+    initrd /boot/initramfs-linux-cachyos.img
+}

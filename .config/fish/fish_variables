@@ -1,5 +1,6 @@
 # This file contains fish universal variable definitions.
 # VERSION: 3.0
+SETUVAR --export GEMINI_API_KEY:AQ\x2eAb8RN6LdE\x2d\x2dpSYlybCKhvA\x2dC7MZ4bCVQm7rK72TYsMve08kQFQ
 SETUVAR __done_min_cmd_duration:10000
 SETUVAR __done_notification_urgency_level:low
 SETUVAR fish_user_paths:/home/lsnozin/\x2elocal/bin

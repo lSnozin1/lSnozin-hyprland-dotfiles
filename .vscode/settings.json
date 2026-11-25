@@ -23,6 +23,7 @@
 
   "files.associations": {
     "*.lua": "lua",
-    "*.luau": "luau"
+    "*.luau": "luau",
+    "**/Extra/grub-miku/40_custom": "plaintext",
   }
 }

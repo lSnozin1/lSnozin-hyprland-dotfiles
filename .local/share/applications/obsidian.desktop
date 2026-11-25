@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Obsidian
+Exec=sh -c 'exec systemd-run --user --scope --unit="app-obsidian-$$.scope" /usr/bin/obsidian "$@"' -- %U
+Terminal=false
+Type=Application
+Icon=obsidian
+StartupWMClass=md.obsidian.Obsidian
+Comment=Obsidian
+MimeType=application/pdf;text/markdown;application/x-obsidian-canvas;application/x-obsidian-base;x-scheme-handler/obsidian;
+Categories=Office;

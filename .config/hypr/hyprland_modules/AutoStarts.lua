@@ -33,19 +33,19 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("sleep 2 && noctalia msg bar-toggle utils")
 
 	-- permanent kitty for special workspace 'kitty' (not rlly important) 
-	hl.exec_cmd("[silent] sleep 5 && kitty --class kitty-permanent --single-instance")
+	hl.exec_cmd("[silent] sleep 2 && kitty --class kitty-permanent --single-instance")
 
 	-- permanent btop for special workspace 'btop' (not rlly important) (not part of single instance to allow for custom layout, uses more resources thanks to it though)
-	hl.exec_cmd("[silent] sleep 5 && kitty --class btop-permanent -o confirm_os_window_close=1 -o tab_bar_min_tabs=2 -o window_padding_width=0 -e btop")
+	hl.exec_cmd("[silent] sleep 6 && kitty --class btop-permanent -o confirm_os_window_close=1 -o tab_bar_min_tabs=2 -o window_padding_width=0 -e btop")
 
 	-- Hyprland’s idle management daemon (uncomment if you prefer it over noctalia itself)
 	-- hl.exec_cmd("hypridle")
 
 	-- wallpaper (not that important)
-	hl.exec_cmd("sleep 5 && env PATH=\"$HOME/.local/share/waywallen-shim:$PATH\" waywallen --no-ui")
+	hl.exec_cmd("sleep 3 && env PATH=\"$HOME/.local/share/waywallen-shim:$PATH\" waywallen --no-ui")
 
 	-- quickshell widgets on background
-	hl.exec_cmd("~/.local/bin/desktop-widgets")
+	hl.exec_cmd("sleep 5 && ~/.local/bin/desktop-widgets")
 
 	-- 	hl.exec_cmd('linux-wallpaperengine --screen-root ' .. PRIMARY_MONITOR .. ' --scaling stretch --fullscreen-pause-only-active --fps 60 --assets-dir "/mnt/SO/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/assets" "/mnt/SO/Program Files (x86)/Steam/steamapps/workshop/content/431960/2799877694/"')	hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
 	-- 	hl.exec_cmd('linux-wallpaperengine --screen-root ' .. MONITOR2 .. ' --scaling stretch --fullscreen-pause-only-active --fps 60 --assets-dir "/mnt/SO/Program Files (x86)/Steam/steamapps/common/wallpaper_engine/assets" "/mnt/SO/Program Files (x86)/Steam/steamapps/workshop/content/431960/2225690388/"') 
