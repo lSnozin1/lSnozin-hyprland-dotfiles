@@ -1,5 +1,28 @@
 #!/bin/sh
 # Xsetup - run as root before the login dialog appears
 
-xrandr --output DP-1 --primary --mode 1920x1080 --rate 200 --pos 0x0 --output HDMI-A-1 --mode 1920x1080 --rate 60 --right-of DP-1
-(sleep 1 && xdotool mousemove 959 540 && xdotool mousemove 960 540) &
+DP_OUT=$(xrandr | awk '/ connected/ && /^DP-/ {print $1; exit}')
+HDMI_OUT=$(xrandr | awk '/ connected/ && /^HDMI-/ {print $1; exit}')
+
+if [ -n "$DP_OUT" ]; then
+    xrandr --output "$DP_OUT" --primary --mode 1920x1080 --rate 200 --pos 0x0
+fi
+if [ -n "$HDMI_OUT" ]; then
+    xrandr --output "$HDMI_OUT" --off
+fi
+xdotool mousemove 960 540
+
+(
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+        pgrep -x sddm-greeter-qt6 >/dev/null 2>&1 && break
+        sleep 0.2
+    done
+    sleep 1.2
+    if [ -n "$DP_OUT" ] && [ -n "$HDMI_OUT" ]; then
+        xrandr --output "$HDMI_OUT" --mode 1920x1080 --rate 60 --right-of "$DP_OUT"
+        sleep 0.6
+        xdotool mousemove 960 540
+        eval "$(xdotool getmouselocation --shell)"
+        [ -n "$WINDOW" ] && xdotool windowfocus --sync "$WINDOW"
+    fi
+) &

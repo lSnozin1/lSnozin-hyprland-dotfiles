@@ -36,7 +36,8 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
     #   rsync runs WITHOUT --delete, so default sddm files are never touched.
     #   dotsync keeps a manifest of the files it installed last time. Files that
     #   are in the manifest but no longer in the repo are the only removal
-    #   candidates, and they are MOVED to the backup, not deleted.
+    #   candidates, and they are MOVED to the backup, not deleted. Directories
+    #   left empty by the removal are cleaned up (first-level dirs are kept).
     #
     # Ignored files:
     #   Stray files inside sddm/ in the repo (.directory, .gitignore,
@@ -45,11 +46,16 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
     #
     # Files:
     #   ~/.local/state/dotsync/<timestamp>/   backup of overwritten/removed files
+    #                                         (owned by you, no sudo needed to clean)
     #   ~/.local/state/dotsync/manifest       files installed by the last run
     #
     # Exit code: 0 on success, 1 on error, failed apply or cancelled confirmation.
 
     argparse n/dry-run y/yes c/clean -- $argv; or return 1
+    if test (count $argv) -gt 0
+        echo "unexpected argument: $argv"
+        return 1
+    end
 
     set -l repo ~/Projects/lSnozin-hyprland-dotfiles
     set -l src $repo/sddm/usr/share/sddm/
@@ -82,8 +88,17 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
         echo "repo not found: $repo"
         return 1
     end
-    if test (count $src/themes/*) -eq 0; or not test -s $conf_src
-        echo "sddm files in the repo are incomplete, aborting"
+    if not test -d $dst
+        echo "sddm does not seem to be installed: $dst not found"
+        return 1
+    end
+    set -l repo_files (find $src ! -type d $fnd -print -quit 2>/dev/null)
+    if test (count $repo_files) -eq 0
+        echo "no sddm files found in the repo ($src), aborting"
+        return 1
+    end
+    if not test -s $conf_src
+        echo "missing or empty: $conf_src, aborting"
         return 1
     end
     set -l theme (string match -rg '^\s*Current=\s*(\S+)' <$conf_src | head -n1)
@@ -193,10 +208,24 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
                 pushd $dst >/dev/null
                 sudo rsync -aR --remove-source-files -- $gone $bk/; or set ok 0
                 popd >/dev/null
+                if test $ok -eq 1
+                    # drop directories left empty by the removal (rmdir never removes
+                    # non-empty ones, and the first-level dirs are never touched)
+                    for f in $gone
+                        set -l d (path dirname $f)
+                        while string match -q '*/*' -- $d
+                            sudo rmdir $dst/$d 2>/dev/null; or break
+                            set d (path dirname $d)
+                        end
+                    end
+                end
             end
             if test $ok -eq 1; and test $conf_diff -eq 1
                 sudo install -m 644 -o root -g root $conf_src /etc/sddm.conf; or set ok 0
             end
+
+            # backups were written by root, give them back to the user
+            sudo chown -R (id -u):(id -g) $bk 2>/dev/null
 
             if test $ok -eq 1
                 test (count $now) -gt 0; and printf '%s\n' $now >$manifest
@@ -209,7 +238,7 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
     end
 
     # --- extras ---
-    set -l broken (find ~/.config ~/.local/bin ~/.local/share/applications -xtype l -lname '*lSnozin-hyprland-dotfiles*' 2>/dev/null)
+    set -l broken (find ~/.config ~/.local/bin ~/.local/share/applications -xtype l -lname "*"(path basename $repo)"*" 2>/dev/null)
     if test (count $broken) -gt 0
         echo "broken links pointing to the repo (use dotsync --clean):"
         printf '%s\n' $broken
@@ -217,5 +246,6 @@ function dotsync -d "Apply dotfiles (stow) and sync sddm with safety checks"
 
     set -l pending (git -C $repo status --short | count)
     test $pending -gt 0; and echo "git: $pending file(s) with uncommitted changes"
+    set -q _flag_dry_run; and echo "dry-run: nothing was changed"
     return $rc
 end
